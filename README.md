@@ -49,6 +49,8 @@ Variout options are available.
 | `-t` | Use `http://+:80/Temporary_Listen_Addresses/` as prefix. |
 | `-w` | Launch default web browser after starting listening. |
 | `--legacy-index-page` | Generate index page written in HTML4.01. |
+| `--log-format-common` | Write logs in common log format. |
+| `--log-format-combined` | Write logs in combined log format. (Default) |
 
 ## LICENSE
 

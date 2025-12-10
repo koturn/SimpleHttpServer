@@ -242,6 +242,7 @@ namespace SimpleHttpServer
             var treatPrefixRootAsLocalRoot = false;
             var shouldLaunchWebBrowser = false;
             var isGenerateHtml5IndexPage = true;
+            var logFormatType = LogFormatType.Combined;
             var allowToGenerateChromeDevToolJson = false;
 
             var fallbackToFreePort = true;
@@ -300,6 +301,12 @@ namespace SimpleHttpServer
                         case "--legacy-index-page":
                             isGenerateHtml5IndexPage = false;
                             break;
+                        case "--log-format-common":
+                            logFormatType = LogFormatType.Common;
+                            break;
+                        case "--log-format-combined":
+                            logFormatType = LogFormatType.Combined;
+                            break;
                         case "--":
                             treatNonOptionArg = true;
                             break;
@@ -319,7 +326,16 @@ namespace SimpleHttpServer
                 port = EnsureAvailablePort(port);
             }
 
-            return new AppOptions(hostPart, port, localRootPath, prefixRoot, treatPrefixRootAsLocalRoot, shouldLaunchWebBrowser, isGenerateHtml5IndexPage, allowToGenerateChromeDevToolJson);
+            return new AppOptions(
+                hostPart,
+                port,
+                localRootPath,
+                prefixRoot,
+                treatPrefixRootAsLocalRoot,
+                shouldLaunchWebBrowser,
+                isGenerateHtml5IndexPage,
+                logFormatType,
+                allowToGenerateChromeDevToolJson);
         }
 
         /// <summary>
@@ -369,6 +385,10 @@ namespace SimpleHttpServer
             writer.WriteLine("    Launch default web browser after starting listening.");
             writer.WriteLine("  --legacy-index-page");
             writer.WriteLine("    Generate index page written in HTML4.01.");
+            writer.WriteLine("  --log-format-common");
+            writer.WriteLine("    Write logs in common log format.");
+            writer.WriteLine("  --log-format-combined");
+            writer.WriteLine("    Write logs in combined log format. (Default)");
         }
 
         /// <summary>
@@ -505,39 +525,14 @@ namespace SimpleHttpServer
 
                                     lock (_consoleLock)
                                     {
-                                        //
-                                        // Items in common log format.
-                                        //
-                                        Console.ForegroundColor = RemoteEndPointAddressColor;
-                                        Console.Write("{0}", request.RemoteEndPoint.Address);
-                                        Console.ForegroundColor = NonImportantPartColor;
-                                        Console.Write(" - -");
-                                        Console.ForegroundColor = TimestampColor;
-                                        Console.Write(" [{0}]", GetCurrentTimestamp());
-                                        Console.ForegroundColor = ResponseHeaderColor;
-                                        Console.Write(" \"{0} {1} HTTP/{2}\"", request.HttpMethod, request.RawUrl, request.ProtocolVersion);
-                                        var statusType = response.StatusCode / 100;
-                                        Console.ForegroundColor = statusType == 2 ? HttpStatusOkColor
-                                            : (statusType == 4 || statusType == 5) ? HttpStatusNgColor
-                                            : HttpStatusOtherColor;
-                                        Console.Write(" {0}", response.StatusCode);
-                                        Console.ForegroundColor = ContentLengthColor;
-                                        if (response.StatusCode == (int)HttpStatusCode.OK)
+                                        if (appOptions.LogFormatType == LogFormatType.Combined)
                                         {
-                                            Console.Write(" {0}", response.ContentLength64);
+                                            WriteLogInCombinedLogFormat(Console.Out, request, response);
                                         }
                                         else
                                         {
-                                            Console.Write(" -");
+                                            WriteLogInCommonLogFormat(Console.Out, request, response);
                                         }
-                                        //
-                                        // Additional items in combined log format.
-                                        //
-                                        Console.ForegroundColor = UrlRefererColor;
-                                        Console.Write(" \"{0}\"", request.UrlReferrer == null ? "-" : request.UrlReferrer.ToString());
-                                        Console.ForegroundColor = UserAgentColor;
-                                        Console.WriteLine(" \"{0}\"", request.UserAgent);
-                                        Console.ResetColor();
                                     }
                                 }
                             }
@@ -676,6 +671,60 @@ namespace SimpleHttpServer
         private static string GetCurrentTimestamp()
         {
             return DateTime.Now.ToString(DateTimeFormat);
+        }
+
+        /// <summary>
+        /// Write access log in the combined log format.
+        /// </summary>
+        /// <param name="writer"><see cref="TextWriter"/> to output.</param>
+        /// <param name="request">HTTP request instance.</param>
+        /// <param name="response">HTTP response instance.</param>
+        private static void WriteLogInCombinedLogFormat(TextWriter writer, HttpListenerRequest request, HttpListenerResponse response)
+        {
+            WriteLogInCommonLogFormat(writer, request, response, false);
+            Console.ForegroundColor = UrlRefererColor;
+            writer.Write(" \"{0}\"", request.UrlReferrer == null ? "-" : request.UrlReferrer.ToString());
+            Console.ForegroundColor = UserAgentColor;
+            writer.WriteLine(" \"{0}\"", request.UserAgent);
+            Console.ResetColor();
+        }
+
+        /// <summary>
+        /// Write access log in the combined log format.
+        /// </summary>
+        /// <param name="writer"><see cref="TextWriter"/> to output.</param>
+        /// <param name="request">HTTP request instance.</param>
+        /// <param name="response">HTTP response instance.</param>
+        /// <param name="shouldWriteNewLine">True to write new line code and reset console color.</param>
+        private static void WriteLogInCommonLogFormat(TextWriter writer, HttpListenerRequest request, HttpListenerResponse response, bool shouldWriteNewLine = true)
+        {
+            Console.ForegroundColor = RemoteEndPointAddressColor;
+            writer.Write("{0}", request.RemoteEndPoint.Address);
+            Console.ForegroundColor = NonImportantPartColor;
+            writer.Write(" - -");
+            Console.ForegroundColor = TimestampColor;
+            writer.Write(" [{0}]", GetCurrentTimestamp());
+            Console.ForegroundColor = ResponseHeaderColor;
+            writer.Write(" \"{0} {1} HTTP/{2}\"", request.HttpMethod, request.RawUrl, request.ProtocolVersion);
+            var statusType = response.StatusCode / 100;
+            Console.ForegroundColor = statusType == 2 ? HttpStatusOkColor
+                : (statusType == 4 || statusType == 5) ? HttpStatusNgColor
+                : HttpStatusOtherColor;
+            writer.Write(" {0}", response.StatusCode);
+            Console.ForegroundColor = ContentLengthColor;
+            if (response.StatusCode == (int)HttpStatusCode.OK)
+            {
+                writer.Write(" {0}", response.ContentLength64);
+            }
+            else
+            {
+                writer.Write(" -");
+            }
+            if (shouldWriteNewLine)
+            {
+                writer.WriteLine();
+                Console.ResetColor();
+            }
         }
 
         /// <summary>
@@ -932,6 +981,10 @@ namespace SimpleHttpServer
             /// </summary>
             public bool IsGenerateHtml5IndexPage { get; private set; }
             /// <summary>
+            /// Log format type.
+            /// </summary>
+            public LogFormatType LogFormatType { get; private set; }
+            /// <summary>
             /// Allow to generate /.well-known/appspecific/com.chrome.devtools.json.
             /// </summary>
             public bool AllowToGenerateChromeDevToolJson { get; private set; }
@@ -946,8 +999,18 @@ namespace SimpleHttpServer
             /// <param name="treatPrefixRootAsLocalRoot">True to treat the prefix root directory as the local root directory.</param>
             /// <param name="shouldLaunchWebBrowser">True to launch default web browser after starting listening.</param>
             /// <param name="isGenerateHtml5IndexPage">True to create HTML5 index page, otherwise false (create HTML4.01 index page).</param>
+            /// <param name="logFormatType">Log format type.</param>
             /// <param name="allowToGenerateChromeDevToolJson">Allow to generate /.well-known/appspecific/com.chrome.devtools.json.</param>
-            public AppOptions(string hostPart, int port, string localRootPath, string prefixRoot, bool treatPrefixRootAsLocalRoot, bool shouldLaunchWebBrowser, bool isGenerateHtml5IndexPage, bool allowToGenerateChromeDevToolJson)
+            public AppOptions(
+                string hostPart,
+                int port,
+                string localRootPath,
+                string prefixRoot,
+                bool treatPrefixRootAsLocalRoot,
+                bool shouldLaunchWebBrowser,
+                bool isGenerateHtml5IndexPage,
+                LogFormatType logFormatType,
+                bool allowToGenerateChromeDevToolJson)
             {
                 HostPart = hostPart;
                 Port = port;
@@ -955,9 +1018,25 @@ namespace SimpleHttpServer
                 PrefixRoot = prefixRoot;
                 TreatPrefixRootAsLocalRoot = treatPrefixRootAsLocalRoot;
                 ShouldLaunchWebBrowser = shouldLaunchWebBrowser;
+                LogFormatType = logFormatType;
                 IsGenerateHtml5IndexPage = isGenerateHtml5IndexPage;
                 AllowToGenerateChromeDevToolJson = allowToGenerateChromeDevToolJson;
             }
+        }
+
+        /// <summary>
+        /// Log format values.
+        /// </summary>
+        private enum LogFormatType
+        {
+            /// <summary>
+            /// Represent that write logs in common log format.
+            /// </summary>
+            Common,
+            /// <summary>
+            /// Represent that write logs in combined log format.
+            /// </summary>
+            Combined
         }
 
 #if !USE_SYSTEM_WEB_MIME_MAPPING
