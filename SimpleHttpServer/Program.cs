@@ -41,11 +41,7 @@ namespace SimpleHttpServer
     /// <para>This program can be compile with default C# compiler:</para>
     /// <para><c>C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc /nologo /w:4 /o /out:SimpleHttpServer.exe Program.cs</c></para>
     /// </remarks>
-#if SUPPORT_LIBRARY_IMPORT
-    public static partial class Program
-#else
     public static class Program
-#endif  // SUPPORT_LIBRARY_IMPORT
     {
         /// <summary>
         /// Default local root path.
@@ -946,893 +942,893 @@ namespace SimpleHttpServer
             }
         }
 #endif  // USE_EMBEDDED_ICON_AS_FAVICON
+    }
+
+    /// <summary>
+    /// Application options.
+    /// </summary>
+    public sealed class AppOptions
+    {
+        /// <summary>
+        /// Host part string of the prefix.
+        /// </summary>
+        public string HostPart { get; private set; }
+        /// <summary>
+        /// Port number for listening.
+        /// </summary>
+        public int Port { get; private set; }
+        /// <summary>
+        /// Local root path.
+        /// </summary>
+        public string LocalRootPath { get; private set; }
+        /// <summary>
+        /// Root path of the prefix.
+        /// </summary>
+        public string PrefixRoot { get; private set; }
+        /// <summary>
+        /// True to treat the prefix root directory as the local root directory.
+        /// </summary>
+        public bool TreatPrefixRootAsLocalRoot { get; private set; }
+        /// <summary>
+        /// True to launch default web browser after starting listening.
+        /// </summary>
+        public bool ShouldLaunchWebBrowser { get; private set; }
+        /// <summary>
+        /// True to create HTML5 index page, otherwise false (create HTML4.01 index page).
+        /// </summary>
+        public bool IsGenerateHtml5IndexPage { get; private set; }
+        /// <summary>
+        /// Log format type.
+        /// </summary>
+        public LogFormatType LogFormatType { get; private set; }
+        /// <summary>
+        /// Allow to generate /.well-known/appspecific/com.chrome.devtools.json.
+        /// </summary>
+        public bool AllowToGenerateChromeDevToolJson { get; private set; }
 
         /// <summary>
-        /// Application options.
+        /// Create <see cref="AppOptions"/> instance.
         /// </summary>
-        private class AppOptions
+        /// <param name="hostPart">Host part string of the prefix.</param>
+        /// <param name="port">Port number for listening.</param>
+        /// <param name="localRootPath">Local root path.</param>
+        /// <param name="prefixRoot">Root path of the prefix.</param>
+        /// <param name="treatPrefixRootAsLocalRoot">True to treat the prefix root directory as the local root directory.</param>
+        /// <param name="shouldLaunchWebBrowser">True to launch default web browser after starting listening.</param>
+        /// <param name="isGenerateHtml5IndexPage">True to create HTML5 index page, otherwise false (create HTML4.01 index page).</param>
+        /// <param name="logFormatType">Log format type.</param>
+        /// <param name="allowToGenerateChromeDevToolJson">Allow to generate /.well-known/appspecific/com.chrome.devtools.json.</param>
+        public AppOptions(
+            string hostPart,
+            int port,
+            string localRootPath,
+            string prefixRoot,
+            bool treatPrefixRootAsLocalRoot,
+            bool shouldLaunchWebBrowser,
+            bool isGenerateHtml5IndexPage,
+            LogFormatType logFormatType,
+            bool allowToGenerateChromeDevToolJson)
         {
-            /// <summary>
-            /// Host part string of the prefix.
-            /// </summary>
-            public string HostPart { get; private set; }
-            /// <summary>
-            /// Port number for listening.
-            /// </summary>
-            public int Port { get; private set; }
-            /// <summary>
-            /// Local root path.
-            /// </summary>
-            public string LocalRootPath { get; private set; }
-            /// <summary>
-            /// Root path of the prefix.
-            /// </summary>
-            public string PrefixRoot { get; private set; }
-            /// <summary>
-            /// True to treat the prefix root directory as the local root directory.
-            /// </summary>
-            public bool TreatPrefixRootAsLocalRoot { get; private set; }
-            /// <summary>
-            /// True to launch default web browser after starting listening.
-            /// </summary>
-            public bool ShouldLaunchWebBrowser { get; private set; }
-            /// <summary>
-            /// True to create HTML5 index page, otherwise false (create HTML4.01 index page).
-            /// </summary>
-            public bool IsGenerateHtml5IndexPage { get; private set; }
-            /// <summary>
-            /// Log format type.
-            /// </summary>
-            public LogFormatType LogFormatType { get; private set; }
-            /// <summary>
-            /// Allow to generate /.well-known/appspecific/com.chrome.devtools.json.
-            /// </summary>
-            public bool AllowToGenerateChromeDevToolJson { get; private set; }
-
-            /// <summary>
-            /// Create <see cref="AppOptions"/> instance.
-            /// </summary>
-            /// <param name="hostPart">Host part string of the prefix.</param>
-            /// <param name="port">Port number for listening.</param>
-            /// <param name="localRootPath">Local root path.</param>
-            /// <param name="prefixRoot">Root path of the prefix.</param>
-            /// <param name="treatPrefixRootAsLocalRoot">True to treat the prefix root directory as the local root directory.</param>
-            /// <param name="shouldLaunchWebBrowser">True to launch default web browser after starting listening.</param>
-            /// <param name="isGenerateHtml5IndexPage">True to create HTML5 index page, otherwise false (create HTML4.01 index page).</param>
-            /// <param name="logFormatType">Log format type.</param>
-            /// <param name="allowToGenerateChromeDevToolJson">Allow to generate /.well-known/appspecific/com.chrome.devtools.json.</param>
-            public AppOptions(
-                string hostPart,
-                int port,
-                string localRootPath,
-                string prefixRoot,
-                bool treatPrefixRootAsLocalRoot,
-                bool shouldLaunchWebBrowser,
-                bool isGenerateHtml5IndexPage,
-                LogFormatType logFormatType,
-                bool allowToGenerateChromeDevToolJson)
-            {
-                HostPart = hostPart;
-                Port = port;
-                LocalRootPath = localRootPath;
-                PrefixRoot = prefixRoot;
-                TreatPrefixRootAsLocalRoot = treatPrefixRootAsLocalRoot;
-                ShouldLaunchWebBrowser = shouldLaunchWebBrowser;
-                LogFormatType = logFormatType;
-                IsGenerateHtml5IndexPage = isGenerateHtml5IndexPage;
-                AllowToGenerateChromeDevToolJson = allowToGenerateChromeDevToolJson;
-            }
+            HostPart = hostPart;
+            Port = port;
+            LocalRootPath = localRootPath;
+            PrefixRoot = prefixRoot;
+            TreatPrefixRootAsLocalRoot = treatPrefixRootAsLocalRoot;
+            ShouldLaunchWebBrowser = shouldLaunchWebBrowser;
+            LogFormatType = logFormatType;
+            IsGenerateHtml5IndexPage = isGenerateHtml5IndexPage;
+            AllowToGenerateChromeDevToolJson = allowToGenerateChromeDevToolJson;
         }
+    }
 
+    /// <summary>
+    /// Log format values.
+    /// </summary>
+    public enum LogFormatType
+    {
         /// <summary>
-        /// Log format values.
+        /// Represent that write logs in common log format.
         /// </summary>
-        private enum LogFormatType
-        {
-            /// <summary>
-            /// Represent that write logs in common log format.
-            /// </summary>
-            Common,
-            /// <summary>
-            /// Represent that write logs in combined log format.
-            /// </summary>
-            Combined
-        }
+        Common,
+        /// <summary>
+        /// Represent that write logs in combined log format.
+        /// </summary>
+        Combined
+    }
 
 #if !USE_SYSTEM_WEB_MIME_MAPPING
+    /// <summary>
+    /// MIME type mapper class.
+    /// </summary>
+    public static class MimeMapper
+    {
         /// <summary>
-        /// MIME type mapper class.
+        /// Fallback MIME type, which is used when extension is not exists in <see cref="_mimeTypeDict"/>.
         /// </summary>
-        private static class MimeMapper
+        private const string FallbackMimeType = "application/octet-stream";
+        /// <summary>
+        /// Extension - MIME type dictionary.
+        /// </summary>
+        private static readonly Dictionary<string, string> _mimeTypeDict = new Dictionary<string, string>()
         {
-            /// <summary>
-            /// Fallback MIME type, which is used when extension is not exists in <see cref="_mimeTypeDict"/>.
-            /// </summary>
-            private const string FallbackMimeType = "application/octet-stream";
-            /// <summary>
-            /// Extension - MIME type dictionary.
-            /// </summary>
-            private static readonly Dictionary<string, string> _mimeTypeDict = new Dictionary<string, string>()
-            {
-                {".323", "text/h323"},
-                {".aaf", "application/octet-stream"},
-                {".aca", "application/octet-stream"},
-                {".accdb", "application/msaccess"},
-                {".accde", "application/msaccess"},
-                {".accdt", "application/msaccess"},
-                {".acx", "application/internet-property-stream"},
-                {".afm", "application/octet-stream"},
-                {".ai", "application/postscript"},
-                {".aif", "audio/x-aiff"},
-                {".aifc", "audio/aiff"},
-                {".aiff", "audio/aiff"},
-                {".application", "application/x-ms-application"},
-                {".art", "image/x-jg"},
-                {".asd", "application/octet-stream"},
-                {".asf", "video/x-ms-asf"},
-                {".asi", "application/octet-stream"},
-                {".asm", "text/plain"},
-                {".asr", "video/x-ms-asf"},
-                {".asx", "video/x-ms-asf"},
-                {".atom", "application/atom+xml"},
-                {".au", "audio/basic"},
-                {".avi", "video/x-msvideo"},
-                {".axs", "application/olescript"},
-                {".bas", "text/plain"},
-                {".bcpio", "application/x-bcpio"},
-                {".bin", "application/octet-stream"},
-                {".bmp", "image/bmp"},
-                {".c", "text/plain"},
-                {".cab", "application/octet-stream"},
-                {".calx", "application/vnd.ms-office.calx"},
-                {".cat", "application/vnd.ms-pki.seccat"},
-                {".cdf", "application/x-cdf"},
-                {".chm", "application/octet-stream"},
-                {".class", "application/x-java-applet"},
-                {".clp", "application/x-msclip"},
-                {".cmx", "image/x-cmx"},
-                {".cnf", "text/plain"},
-                {".cod", "image/cis-cod"},
-                {".cpio", "application/x-cpio"},
-                {".cpp", "text/plain"},
-                {".crd", "application/x-mscardfile"},
-                {".crl", "application/pkix-crl"},
-                {".crt", "application/x-x509-ca-cert"},
-                {".csh", "application/x-csh"},
-                {".cs", "text/plain"},
-                {".css", "text/css"},
-                {".csv", "application/octet-stream"},
-                {".cur", "application/octet-stream"},
-                {".dcr", "application/x-director"},
-                {".deploy", "application/octet-stream"},
-                {".der", "application/x-x509-ca-cert"},
-                {".dib", "image/bmp"},
-                {".dir", "application/x-director"},
-                {".disco", "text/xml"},
-                {".dll", "application/x-msdownload"},
-                {".dll.config", "text/xml"},
-                {".dlm", "text/dlm"},
-                {".doc", "application/msword"},
-                {".docm", "application/vnd.ms-word.document.macroEnabled.12"},
-                {".docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"},
-                {".dot", "application/msword"},
-                {".dotm", "application/vnd.ms-word.template.macroEnabled.12"},
-                {".dotx", "application/vnd.openxmlformats-officedocument.wordprocessingml.template"},
-                {".dsp", "application/octet-stream"},
-                {".dtd", "text/xml"},
-                {".dvi", "application/x-dvi"},
-                {".dwf", "drawing/x-dwf"},
-                {".dwp", "application/octet-stream"},
-                {".dxr", "application/x-director"},
-                {".eml", "message/rfc822"},
-                {".emz", "application/octet-stream"},
-                {".eot", "application/octet-stream"},
-                {".eps", "application/postscript"},
-                {".etx", "text/x-setext"},
-                {".evy", "application/envoy"},
-                {".exe", "application/octet-stream"},
-                {".exe.config", "text/xml"},
-                {".fdf", "application/vnd.fdf"},
-                {".fif", "application/fractals"},
-                {".fla", "application/octet-stream"},
-                {".flr", "x-world/x-vrml"},
-                {".flv", "video/x-flv"},
-                {".gif", "image/gif"},
-                {".gtar", "application/x-gtar"},
-                {".gz", "application/x-gzip"},
-                {".h", "text/plain"},
-                {".hdf", "application/x-hdf"},
-                {".hdml", "text/x-hdml"},
-                {".hhc", "application/x-oleobject"},
-                {".hhk", "application/octet-stream"},
-                {".hhp", "application/octet-stream"},
-                {".hlp", "application/winhlp"},
-                {".hqx", "application/mac-binhex40"},
-                {".hta", "application/hta"},
-                {".htc", "text/x-component"},
-                {".htm", "text/html"},
-                {".html", "text/html"},
-                {".htt", "text/webviewhtml"},
-                {".hxt", "text/html"},
-                {".ico", "image/x-icon"},
-                {".ics", "application/octet-stream"},
-                {".ief", "image/ief"},
-                {".iii", "application/x-iphone"},
-                {".inf", "application/octet-stream"},
-                {".ins", "application/x-internet-signup"},
-                {".isp", "application/x-internet-signup"},
-                {".IVF", "video/x-ivf"},
-                {".jar", "application/java-archive"},
-                {".java", "application/octet-stream"},
-                {".jck", "application/liquidmotion"},
-                {".jcz", "application/liquidmotion"},
-                {".jfif", "image/pjpeg"},
-                {".jpb", "application/octet-stream"},
-                {".jpe", "image/jpeg"},
-                {".jpeg", "image/jpeg"},
-                {".jpg", "image/jpeg"},
-                {".js", "application/x-javascript"},
-                {".jsx", "text/jscript"},
-                {".latex", "application/x-latex"},
-                {".lit", "application/x-ms-reader"},
-                {".lpk", "application/octet-stream"},
-                {".lsf", "video/x-la-asf"},
-                {".lsx", "video/x-la-asf"},
-                {".lzh", "application/octet-stream"},
-                {".m13", "application/x-msmediaview"},
-                {".m14", "application/x-msmediaview"},
-                {".m1v", "video/mpeg"},
-                {".m3u", "audio/x-mpegurl"},
-                {".man", "application/x-troff-man"},
-                {".manifest", "application/x-ms-manifest"},
-                {".map", "text/plain"},
-                {".mdb", "application/x-msaccess"},
-                {".mdp", "application/octet-stream"},
-                {".me", "application/x-troff-me"},
-                {".mht", "message/rfc822"},
-                {".mhtml", "message/rfc822"},
-                {".mid", "audio/mid"},
-                {".midi", "audio/mid"},
-                {".mix", "application/octet-stream"},
-                {".mmf", "application/x-smaf"},
-                {".mno", "text/xml"},
-                {".mny", "application/x-msmoney"},
-                {".mov", "video/quicktime"},
-                {".movie", "video/x-sgi-movie"},
-                {".mp2", "video/mpeg"},
-                {".mp3", "audio/mpeg"},
-                {".mpa", "video/mpeg"},
-                {".mpe", "video/mpeg"},
-                {".mpeg", "video/mpeg"},
-                {".mpg", "video/mpeg"},
-                {".mpp", "application/vnd.ms-project"},
-                {".mpv2", "video/mpeg"},
-                {".ms", "application/x-troff-ms"},
-                {".msi", "application/octet-stream"},
-                {".mso", "application/octet-stream"},
-                {".mvb", "application/x-msmediaview"},
-                {".mvc", "application/x-miva-compiled"},
-                {".nc", "application/x-netcdf"},
-                {".nsc", "video/x-ms-asf"},
-                {".nws", "message/rfc822"},
-                {".ocx", "application/octet-stream"},
-                {".oda", "application/oda"},
-                {".odc", "text/x-ms-odc"},
-                {".ods", "application/oleobject"},
-                {".one", "application/onenote"},
-                {".onea", "application/onenote"},
-                {".onetoc", "application/onenote"},
-                {".onetoc2", "application/onenote"},
-                {".onetmp", "application/onenote"},
-                {".onepkg", "application/onenote"},
-                {".osdx", "application/opensearchdescription+xml"},
-                {".p10", "application/pkcs10"},
-                {".p12", "application/x-pkcs12"},
-                {".p7b", "application/x-pkcs7-certificates"},
-                {".p7c", "application/pkcs7-mime"},
-                {".p7m", "application/pkcs7-mime"},
-                {".p7r", "application/x-pkcs7-certreqresp"},
-                {".p7s", "application/pkcs7-signature"},
-                {".pbm", "image/x-portable-bitmap"},
-                {".pcx", "application/octet-stream"},
-                {".pcz", "application/octet-stream"},
-                {".pdf", "application/pdf"},
-                {".pfb", "application/octet-stream"},
-                {".pfm", "application/octet-stream"},
-                {".pfx", "application/x-pkcs12"},
-                {".pgm", "image/x-portable-graymap"},
-                {".pko", "application/vnd.ms-pki.pko"},
-                {".pma", "application/x-perfmon"},
-                {".pmc", "application/x-perfmon"},
-                {".pml", "application/x-perfmon"},
-                {".pmr", "application/x-perfmon"},
-                {".pmw", "application/x-perfmon"},
-                {".png", "image/png"},
-                {".pnm", "image/x-portable-anymap"},
-                {".pnz", "image/png"},
-                {".pot", "application/vnd.ms-powerpoint"},
-                {".potm", "application/vnd.ms-powerpoint.template.macroEnabled.12"},
-                {".potx", "application/vnd.openxmlformats-officedocument.presentationml.template"},
-                {".ppam", "application/vnd.ms-powerpoint.addin.macroEnabled.12"},
-                {".ppm", "image/x-portable-pixmap"},
-                {".pps", "application/vnd.ms-powerpoint"},
-                {".ppsm", "application/vnd.ms-powerpoint.slideshow.macroEnabled.12"},
-                {".ppsx", "application/vnd.openxmlformats-officedocument.presentationml.slideshow"},
-                {".ppt", "application/vnd.ms-powerpoint"},
-                {".pptm", "application/vnd.ms-powerpoint.presentation.macroEnabled.12"},
-                {".pptx", "application/vnd.openxmlformats-officedocument.presentationml.presentation"},
-                {".prf", "application/pics-rules"},
-                {".prm", "application/octet-stream"},
-                {".prx", "application/octet-stream"},
-                {".ps", "application/postscript"},
-                {".psd", "application/octet-stream"},
-                {".psm", "application/octet-stream"},
-                {".psp", "application/octet-stream"},
-                {".pub", "application/x-mspublisher"},
-                {".qt", "video/quicktime"},
-                {".qtl", "application/x-quicktimeplayer"},
-                {".qxd", "application/octet-stream"},
-                {".ra", "audio/x-pn-realaudio"},
-                {".ram", "audio/x-pn-realaudio"},
-                {".rar", "application/octet-stream"},
-                {".ras", "image/x-cmu-raster"},
-                {".rf", "image/vnd.rn-realflash"},
-                {".rgb", "image/x-rgb"},
-                {".rm", "application/vnd.rn-realmedia"},
-                {".rmi", "audio/mid"},
-                {".roff", "application/x-troff"},
-                {".rpm", "audio/x-pn-realaudio-plugin"},
-                {".rtf", "application/rtf"},
-                {".rtx", "text/richtext"},
-                {".scd", "application/x-msschedule"},
-                {".sct", "text/scriptlet"},
-                {".sea", "application/octet-stream"},
-                {".setpay", "application/set-payment-initiation"},
-                {".setreg", "application/set-registration-initiation"},
-                {".sgml", "text/sgml"},
-                {".sh", "application/x-sh"},
-                {".shar", "application/x-shar"},
-                {".sit", "application/x-stuffit"},
-                {".sldm", "application/vnd.ms-powerpoint.slide.macroEnabled.12"},
-                {".sldx", "application/vnd.openxmlformats-officedocument.presentationml.slide"},
-                {".smd", "audio/x-smd"},
-                {".smi", "application/octet-stream"},
-                {".smx", "audio/x-smd"},
-                {".smz", "audio/x-smd"},
-                {".snd", "audio/basic"},
-                {".snp", "application/octet-stream"},
-                {".spc", "application/x-pkcs7-certificates"},
-                {".spl", "application/futuresplash"},
-                {".src", "application/x-wais-source"},
-                {".ssm", "application/streamingmedia"},
-                {".sst", "application/vnd.ms-pki.certstore"},
-                {".stl", "application/vnd.ms-pki.stl"},
-                {".sv4cpio", "application/x-sv4cpio"},
-                {".sv4crc", "application/x-sv4crc"},
-                {".swf", "application/x-shockwave-flash"},
-                {".t", "application/x-troff"},
-                {".tar", "application/x-tar"},
-                {".tcl", "application/x-tcl"},
-                {".tex", "application/x-tex"},
-                {".texi", "application/x-texinfo"},
-                {".texinfo", "application/x-texinfo"},
-                {".tgz", "application/x-compressed"},
-                {".thmx", "application/vnd.ms-officetheme"},
-                {".thn", "application/octet-stream"},
-                {".tif", "image/tiff"},
-                {".tiff", "image/tiff"},
-                {".toc", "application/octet-stream"},
-                {".tr", "application/x-troff"},
-                {".trm", "application/x-msterminal"},
-                {".tsv", "text/tab-separated-values"},
-                {".ttf", "application/octet-stream"},
-                {".txt", "text/plain"},
-                {".u32", "application/octet-stream"},
-                {".uls", "text/iuls"},
-                {".ustar", "application/x-ustar"},
-                {".vbs", "text/vbscript"},
-                {".vcf", "text/x-vcard"},
-                {".vcs", "text/plain"},
-                {".vdx", "application/vnd.ms-visio.viewer"},
-                {".vml", "text/xml"},
-                {".vsd", "application/vnd.visio"},
-                {".vss", "application/vnd.visio"},
-                {".vst", "application/vnd.visio"},
-                {".vsto", "application/x-ms-vsto"},
-                {".vsw", "application/vnd.visio"},
-                {".vsx", "application/vnd.visio"},
-                {".vtx", "application/vnd.visio"},
-                {".wav", "audio/wav"},
-                {".wax", "audio/x-ms-wax"},
-                {".wbmp", "image/vnd.wap.wbmp"},
-                {".wcm", "application/vnd.ms-works"},
-                {".wdb", "application/vnd.ms-works"},
-                {".wks", "application/vnd.ms-works"},
-                {".wm", "video/x-ms-wm"},
-                {".wma", "audio/x-ms-wma"},
-                {".wmd", "application/x-ms-wmd"},
-                {".wmf", "application/x-msmetafile"},
-                {".wml", "text/vnd.wap.wml"},
-                {".wmlc", "application/vnd.wap.wmlc"},
-                {".wmls", "text/vnd.wap.wmlscript"},
-                {".wmlsc", "application/vnd.wap.wmlscriptc"},
-                {".wmp", "video/x-ms-wmp"},
-                {".wmv", "video/x-ms-wmv"},
-                {".wmx", "video/x-ms-wmx"},
-                {".wmz", "application/x-ms-wmz"},
-                {".wps", "application/vnd.ms-works"},
-                {".wri", "application/x-mswrite"},
-                {".wrl", "x-world/x-vrml"},
-                {".wrz", "x-world/x-vrml"},
-                {".wsdl", "text/xml"},
-                {".wvx", "video/x-ms-wvx"},
-                {".x", "application/directx"},
-                {".xaf", "x-world/x-vrml"},
-                {".xaml", "application/xaml+xml"},
-                {".xap", "application/x-silverlight-app"},
-                {".xbap", "application/x-ms-xbap"},
-                {".xbm", "image/x-xbitmap"},
-                {".xdr", "text/plain"},
-                {".xla", "application/vnd.ms-excel"},
-                {".xlam", "application/vnd.ms-excel.addin.macroEnabled.12"},
-                {".xlc", "application/vnd.ms-excel"},
-                {".xlm", "application/vnd.ms-excel"},
-                {".xls", "application/vnd.ms-excel"},
-                {".xlsb", "application/vnd.ms-excel.sheet.binary.macroEnabled.12"},
-                {".xlsm", "application/vnd.ms-excel.sheet.macroEnabled.12"},
-                {".xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"},
-                {".xlt", "application/vnd.ms-excel"},
-                {".xltm", "application/vnd.ms-excel.template.macroEnabled.12"},
-                {".xltx", "application/vnd.openxmlformats-officedocument.spreadsheetml.template"},
-                {".xlw", "application/vnd.ms-excel"},
-                {".xml", "text/xml"},
-                {".xof", "x-world/x-vrml"},
-                {".xpm", "image/x-xpixmap"},
-                {".xps", "application/vnd.ms-xpsdocument"},
-                {".xsd", "text/xml"},
-                {".xsf", "text/xml"},
-                {".xsl", "text/xml"},
-                {".xslt", "text/xml"},
-                {".xsn", "application/octet-stream"},
-                {".xtp", "application/octet-stream"},
-                {".xwd", "image/x-xwindowdump"},
-                {".z", "application/x-compress"},
-                {".zip", "application/x-zip-compressed"}
-            };
+            {".323", "text/h323"},
+            {".aaf", "application/octet-stream"},
+            {".aca", "application/octet-stream"},
+            {".accdb", "application/msaccess"},
+            {".accde", "application/msaccess"},
+            {".accdt", "application/msaccess"},
+            {".acx", "application/internet-property-stream"},
+            {".afm", "application/octet-stream"},
+            {".ai", "application/postscript"},
+            {".aif", "audio/x-aiff"},
+            {".aifc", "audio/aiff"},
+            {".aiff", "audio/aiff"},
+            {".application", "application/x-ms-application"},
+            {".art", "image/x-jg"},
+            {".asd", "application/octet-stream"},
+            {".asf", "video/x-ms-asf"},
+            {".asi", "application/octet-stream"},
+            {".asm", "text/plain"},
+            {".asr", "video/x-ms-asf"},
+            {".asx", "video/x-ms-asf"},
+            {".atom", "application/atom+xml"},
+            {".au", "audio/basic"},
+            {".avi", "video/x-msvideo"},
+            {".axs", "application/olescript"},
+            {".bas", "text/plain"},
+            {".bcpio", "application/x-bcpio"},
+            {".bin", "application/octet-stream"},
+            {".bmp", "image/bmp"},
+            {".c", "text/plain"},
+            {".cab", "application/octet-stream"},
+            {".calx", "application/vnd.ms-office.calx"},
+            {".cat", "application/vnd.ms-pki.seccat"},
+            {".cdf", "application/x-cdf"},
+            {".chm", "application/octet-stream"},
+            {".class", "application/x-java-applet"},
+            {".clp", "application/x-msclip"},
+            {".cmx", "image/x-cmx"},
+            {".cnf", "text/plain"},
+            {".cod", "image/cis-cod"},
+            {".cpio", "application/x-cpio"},
+            {".cpp", "text/plain"},
+            {".crd", "application/x-mscardfile"},
+            {".crl", "application/pkix-crl"},
+            {".crt", "application/x-x509-ca-cert"},
+            {".csh", "application/x-csh"},
+            {".cs", "text/plain"},
+            {".css", "text/css"},
+            {".csv", "application/octet-stream"},
+            {".cur", "application/octet-stream"},
+            {".dcr", "application/x-director"},
+            {".deploy", "application/octet-stream"},
+            {".der", "application/x-x509-ca-cert"},
+            {".dib", "image/bmp"},
+            {".dir", "application/x-director"},
+            {".disco", "text/xml"},
+            {".dll", "application/x-msdownload"},
+            {".dll.config", "text/xml"},
+            {".dlm", "text/dlm"},
+            {".doc", "application/msword"},
+            {".docm", "application/vnd.ms-word.document.macroEnabled.12"},
+            {".docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"},
+            {".dot", "application/msword"},
+            {".dotm", "application/vnd.ms-word.template.macroEnabled.12"},
+            {".dotx", "application/vnd.openxmlformats-officedocument.wordprocessingml.template"},
+            {".dsp", "application/octet-stream"},
+            {".dtd", "text/xml"},
+            {".dvi", "application/x-dvi"},
+            {".dwf", "drawing/x-dwf"},
+            {".dwp", "application/octet-stream"},
+            {".dxr", "application/x-director"},
+            {".eml", "message/rfc822"},
+            {".emz", "application/octet-stream"},
+            {".eot", "application/octet-stream"},
+            {".eps", "application/postscript"},
+            {".etx", "text/x-setext"},
+            {".evy", "application/envoy"},
+            {".exe", "application/octet-stream"},
+            {".exe.config", "text/xml"},
+            {".fdf", "application/vnd.fdf"},
+            {".fif", "application/fractals"},
+            {".fla", "application/octet-stream"},
+            {".flr", "x-world/x-vrml"},
+            {".flv", "video/x-flv"},
+            {".gif", "image/gif"},
+            {".gtar", "application/x-gtar"},
+            {".gz", "application/x-gzip"},
+            {".h", "text/plain"},
+            {".hdf", "application/x-hdf"},
+            {".hdml", "text/x-hdml"},
+            {".hhc", "application/x-oleobject"},
+            {".hhk", "application/octet-stream"},
+            {".hhp", "application/octet-stream"},
+            {".hlp", "application/winhlp"},
+            {".hqx", "application/mac-binhex40"},
+            {".hta", "application/hta"},
+            {".htc", "text/x-component"},
+            {".htm", "text/html"},
+            {".html", "text/html"},
+            {".htt", "text/webviewhtml"},
+            {".hxt", "text/html"},
+            {".ico", "image/x-icon"},
+            {".ics", "application/octet-stream"},
+            {".ief", "image/ief"},
+            {".iii", "application/x-iphone"},
+            {".inf", "application/octet-stream"},
+            {".ins", "application/x-internet-signup"},
+            {".isp", "application/x-internet-signup"},
+            {".IVF", "video/x-ivf"},
+            {".jar", "application/java-archive"},
+            {".java", "application/octet-stream"},
+            {".jck", "application/liquidmotion"},
+            {".jcz", "application/liquidmotion"},
+            {".jfif", "image/pjpeg"},
+            {".jpb", "application/octet-stream"},
+            {".jpe", "image/jpeg"},
+            {".jpeg", "image/jpeg"},
+            {".jpg", "image/jpeg"},
+            {".js", "application/x-javascript"},
+            {".jsx", "text/jscript"},
+            {".latex", "application/x-latex"},
+            {".lit", "application/x-ms-reader"},
+            {".lpk", "application/octet-stream"},
+            {".lsf", "video/x-la-asf"},
+            {".lsx", "video/x-la-asf"},
+            {".lzh", "application/octet-stream"},
+            {".m13", "application/x-msmediaview"},
+            {".m14", "application/x-msmediaview"},
+            {".m1v", "video/mpeg"},
+            {".m3u", "audio/x-mpegurl"},
+            {".man", "application/x-troff-man"},
+            {".manifest", "application/x-ms-manifest"},
+            {".map", "text/plain"},
+            {".mdb", "application/x-msaccess"},
+            {".mdp", "application/octet-stream"},
+            {".me", "application/x-troff-me"},
+            {".mht", "message/rfc822"},
+            {".mhtml", "message/rfc822"},
+            {".mid", "audio/mid"},
+            {".midi", "audio/mid"},
+            {".mix", "application/octet-stream"},
+            {".mmf", "application/x-smaf"},
+            {".mno", "text/xml"},
+            {".mny", "application/x-msmoney"},
+            {".mov", "video/quicktime"},
+            {".movie", "video/x-sgi-movie"},
+            {".mp2", "video/mpeg"},
+            {".mp3", "audio/mpeg"},
+            {".mpa", "video/mpeg"},
+            {".mpe", "video/mpeg"},
+            {".mpeg", "video/mpeg"},
+            {".mpg", "video/mpeg"},
+            {".mpp", "application/vnd.ms-project"},
+            {".mpv2", "video/mpeg"},
+            {".ms", "application/x-troff-ms"},
+            {".msi", "application/octet-stream"},
+            {".mso", "application/octet-stream"},
+            {".mvb", "application/x-msmediaview"},
+            {".mvc", "application/x-miva-compiled"},
+            {".nc", "application/x-netcdf"},
+            {".nsc", "video/x-ms-asf"},
+            {".nws", "message/rfc822"},
+            {".ocx", "application/octet-stream"},
+            {".oda", "application/oda"},
+            {".odc", "text/x-ms-odc"},
+            {".ods", "application/oleobject"},
+            {".one", "application/onenote"},
+            {".onea", "application/onenote"},
+            {".onetoc", "application/onenote"},
+            {".onetoc2", "application/onenote"},
+            {".onetmp", "application/onenote"},
+            {".onepkg", "application/onenote"},
+            {".osdx", "application/opensearchdescription+xml"},
+            {".p10", "application/pkcs10"},
+            {".p12", "application/x-pkcs12"},
+            {".p7b", "application/x-pkcs7-certificates"},
+            {".p7c", "application/pkcs7-mime"},
+            {".p7m", "application/pkcs7-mime"},
+            {".p7r", "application/x-pkcs7-certreqresp"},
+            {".p7s", "application/pkcs7-signature"},
+            {".pbm", "image/x-portable-bitmap"},
+            {".pcx", "application/octet-stream"},
+            {".pcz", "application/octet-stream"},
+            {".pdf", "application/pdf"},
+            {".pfb", "application/octet-stream"},
+            {".pfm", "application/octet-stream"},
+            {".pfx", "application/x-pkcs12"},
+            {".pgm", "image/x-portable-graymap"},
+            {".pko", "application/vnd.ms-pki.pko"},
+            {".pma", "application/x-perfmon"},
+            {".pmc", "application/x-perfmon"},
+            {".pml", "application/x-perfmon"},
+            {".pmr", "application/x-perfmon"},
+            {".pmw", "application/x-perfmon"},
+            {".png", "image/png"},
+            {".pnm", "image/x-portable-anymap"},
+            {".pnz", "image/png"},
+            {".pot", "application/vnd.ms-powerpoint"},
+            {".potm", "application/vnd.ms-powerpoint.template.macroEnabled.12"},
+            {".potx", "application/vnd.openxmlformats-officedocument.presentationml.template"},
+            {".ppam", "application/vnd.ms-powerpoint.addin.macroEnabled.12"},
+            {".ppm", "image/x-portable-pixmap"},
+            {".pps", "application/vnd.ms-powerpoint"},
+            {".ppsm", "application/vnd.ms-powerpoint.slideshow.macroEnabled.12"},
+            {".ppsx", "application/vnd.openxmlformats-officedocument.presentationml.slideshow"},
+            {".ppt", "application/vnd.ms-powerpoint"},
+            {".pptm", "application/vnd.ms-powerpoint.presentation.macroEnabled.12"},
+            {".pptx", "application/vnd.openxmlformats-officedocument.presentationml.presentation"},
+            {".prf", "application/pics-rules"},
+            {".prm", "application/octet-stream"},
+            {".prx", "application/octet-stream"},
+            {".ps", "application/postscript"},
+            {".psd", "application/octet-stream"},
+            {".psm", "application/octet-stream"},
+            {".psp", "application/octet-stream"},
+            {".pub", "application/x-mspublisher"},
+            {".qt", "video/quicktime"},
+            {".qtl", "application/x-quicktimeplayer"},
+            {".qxd", "application/octet-stream"},
+            {".ra", "audio/x-pn-realaudio"},
+            {".ram", "audio/x-pn-realaudio"},
+            {".rar", "application/octet-stream"},
+            {".ras", "image/x-cmu-raster"},
+            {".rf", "image/vnd.rn-realflash"},
+            {".rgb", "image/x-rgb"},
+            {".rm", "application/vnd.rn-realmedia"},
+            {".rmi", "audio/mid"},
+            {".roff", "application/x-troff"},
+            {".rpm", "audio/x-pn-realaudio-plugin"},
+            {".rtf", "application/rtf"},
+            {".rtx", "text/richtext"},
+            {".scd", "application/x-msschedule"},
+            {".sct", "text/scriptlet"},
+            {".sea", "application/octet-stream"},
+            {".setpay", "application/set-payment-initiation"},
+            {".setreg", "application/set-registration-initiation"},
+            {".sgml", "text/sgml"},
+            {".sh", "application/x-sh"},
+            {".shar", "application/x-shar"},
+            {".sit", "application/x-stuffit"},
+            {".sldm", "application/vnd.ms-powerpoint.slide.macroEnabled.12"},
+            {".sldx", "application/vnd.openxmlformats-officedocument.presentationml.slide"},
+            {".smd", "audio/x-smd"},
+            {".smi", "application/octet-stream"},
+            {".smx", "audio/x-smd"},
+            {".smz", "audio/x-smd"},
+            {".snd", "audio/basic"},
+            {".snp", "application/octet-stream"},
+            {".spc", "application/x-pkcs7-certificates"},
+            {".spl", "application/futuresplash"},
+            {".src", "application/x-wais-source"},
+            {".ssm", "application/streamingmedia"},
+            {".sst", "application/vnd.ms-pki.certstore"},
+            {".stl", "application/vnd.ms-pki.stl"},
+            {".sv4cpio", "application/x-sv4cpio"},
+            {".sv4crc", "application/x-sv4crc"},
+            {".swf", "application/x-shockwave-flash"},
+            {".t", "application/x-troff"},
+            {".tar", "application/x-tar"},
+            {".tcl", "application/x-tcl"},
+            {".tex", "application/x-tex"},
+            {".texi", "application/x-texinfo"},
+            {".texinfo", "application/x-texinfo"},
+            {".tgz", "application/x-compressed"},
+            {".thmx", "application/vnd.ms-officetheme"},
+            {".thn", "application/octet-stream"},
+            {".tif", "image/tiff"},
+            {".tiff", "image/tiff"},
+            {".toc", "application/octet-stream"},
+            {".tr", "application/x-troff"},
+            {".trm", "application/x-msterminal"},
+            {".tsv", "text/tab-separated-values"},
+            {".ttf", "application/octet-stream"},
+            {".txt", "text/plain"},
+            {".u32", "application/octet-stream"},
+            {".uls", "text/iuls"},
+            {".ustar", "application/x-ustar"},
+            {".vbs", "text/vbscript"},
+            {".vcf", "text/x-vcard"},
+            {".vcs", "text/plain"},
+            {".vdx", "application/vnd.ms-visio.viewer"},
+            {".vml", "text/xml"},
+            {".vsd", "application/vnd.visio"},
+            {".vss", "application/vnd.visio"},
+            {".vst", "application/vnd.visio"},
+            {".vsto", "application/x-ms-vsto"},
+            {".vsw", "application/vnd.visio"},
+            {".vsx", "application/vnd.visio"},
+            {".vtx", "application/vnd.visio"},
+            {".wav", "audio/wav"},
+            {".wax", "audio/x-ms-wax"},
+            {".wbmp", "image/vnd.wap.wbmp"},
+            {".wcm", "application/vnd.ms-works"},
+            {".wdb", "application/vnd.ms-works"},
+            {".wks", "application/vnd.ms-works"},
+            {".wm", "video/x-ms-wm"},
+            {".wma", "audio/x-ms-wma"},
+            {".wmd", "application/x-ms-wmd"},
+            {".wmf", "application/x-msmetafile"},
+            {".wml", "text/vnd.wap.wml"},
+            {".wmlc", "application/vnd.wap.wmlc"},
+            {".wmls", "text/vnd.wap.wmlscript"},
+            {".wmlsc", "application/vnd.wap.wmlscriptc"},
+            {".wmp", "video/x-ms-wmp"},
+            {".wmv", "video/x-ms-wmv"},
+            {".wmx", "video/x-ms-wmx"},
+            {".wmz", "application/x-ms-wmz"},
+            {".wps", "application/vnd.ms-works"},
+            {".wri", "application/x-mswrite"},
+            {".wrl", "x-world/x-vrml"},
+            {".wrz", "x-world/x-vrml"},
+            {".wsdl", "text/xml"},
+            {".wvx", "video/x-ms-wvx"},
+            {".x", "application/directx"},
+            {".xaf", "x-world/x-vrml"},
+            {".xaml", "application/xaml+xml"},
+            {".xap", "application/x-silverlight-app"},
+            {".xbap", "application/x-ms-xbap"},
+            {".xbm", "image/x-xbitmap"},
+            {".xdr", "text/plain"},
+            {".xla", "application/vnd.ms-excel"},
+            {".xlam", "application/vnd.ms-excel.addin.macroEnabled.12"},
+            {".xlc", "application/vnd.ms-excel"},
+            {".xlm", "application/vnd.ms-excel"},
+            {".xls", "application/vnd.ms-excel"},
+            {".xlsb", "application/vnd.ms-excel.sheet.binary.macroEnabled.12"},
+            {".xlsm", "application/vnd.ms-excel.sheet.macroEnabled.12"},
+            {".xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"},
+            {".xlt", "application/vnd.ms-excel"},
+            {".xltm", "application/vnd.ms-excel.template.macroEnabled.12"},
+            {".xltx", "application/vnd.openxmlformats-officedocument.spreadsheetml.template"},
+            {".xlw", "application/vnd.ms-excel"},
+            {".xml", "text/xml"},
+            {".xof", "x-world/x-vrml"},
+            {".xpm", "image/x-xpixmap"},
+            {".xps", "application/vnd.ms-xpsdocument"},
+            {".xsd", "text/xml"},
+            {".xsf", "text/xml"},
+            {".xsl", "text/xml"},
+            {".xslt", "text/xml"},
+            {".xsn", "application/octet-stream"},
+            {".xtp", "application/octet-stream"},
+            {".xwd", "image/x-xwindowdump"},
+            {".z", "application/x-compress"},
+            {".zip", "application/x-zip-compressed"}
+        };
 
-            /// <summary>
-            /// Get MIME type correspond to specified file name.
-            /// </summary>
-            /// <param name="fileName">File name.</param>
-            /// <returns>MIME type string.</returns>
-            public static string GetMimeType(string fileName)
+        /// <summary>
+        /// Get MIME type correspond to specified file name.
+        /// </summary>
+        /// <param name="fileName">File name.</param>
+        /// <returns>MIME type string.</returns>
+        public static string GetMimeType(string fileName)
+        {
+            return GetMimeType(fileName, FallbackMimeType);
+        }
+
+        /// <summary>
+        /// Get MIME type correspond to specified file name.
+        /// </summary>
+        /// <param name="fileName">File name.</param>
+        /// <param name="fallbackMimeType">Fallback MIME type.</param>
+        /// <returns>MIME type string.</returns>
+        public static string GetMimeType(string fileName, string fallbackMimeType)
+        {
+            string mimeType;
+            if (_mimeTypeDict.TryGetValue(Path.GetExtension(fileName), out mimeType))
             {
-                return GetMimeType(fileName, FallbackMimeType);
+                return mimeType;
             }
-
-            /// <summary>
-            /// Get MIME type correspond to specified file name.
-            /// </summary>
-            /// <param name="fileName">File name.</param>
-            /// <param name="fallbackMimeType">Fallback MIME type.</param>
-            /// <returns>MIME type string.</returns>
-            public static string GetMimeType(string fileName, string fallbackMimeType)
+            else
             {
-                string mimeType;
-                if (_mimeTypeDict.TryGetValue(Path.GetExtension(fileName), out mimeType))
-                {
-                    return mimeType;
-                }
-                else
-                {
-                    return fallbackMimeType;
-                }
+                return fallbackMimeType;
             }
         }
+    }
 #endif  // !USE_SYSTEM_WEB_MIME_MAPPING
 
 #if USE_WIN32ICON_AS_FAVICON
-        /// <summary>
-        /// Utility class about icon extraction.
-        /// </summary>
+    /// <summary>
+    /// Utility class about icon extraction.
+    /// </summary>
 #if SUPPORT_LIBRARY_IMPORT
-        private static partial class Win32IconHelper
+    public static partial class Win32IconHelper
 #else
-        private static class Win32IconHelper
+    public static class Win32IconHelper
+#endif  // SUPPORT_LIBRARY_IMPORT
+    {
+        /// <summary>
+        /// An application-defined callback function used
+        /// with the <see cref="SafeNativeMethods.EnumResourceNames(IntPtr, IntPtr, EnumResourceNameProc, IntPtr)"/>
+        /// and <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-enumresourcenamesexw">EnumResourceNamesEx</see> functions.
+        /// It receives the type and name of a resource.
+        /// The <see cref="EnumResourceNameProc"/> type defines a delegate of this callback method.
+        /// EnumResNameProc is a placeholder for the application-defined function name.
+        /// </summary>
+        /// <param name="hModule">A handle to the module whose executable file contains the resources that are being enumerated.
+        /// If this parameter is <see cref="IntPtr.Zero"/>, the function enumerates the resource names in the module used to create the current process.</param>
+        /// <param name="lpType">The type of resource for which the name is being enumerated.
+        /// Alternately, rather than a pointer, this parameter can be <c>MAKEINTRESOURCE(ID)</c>, where ID is an integer value representing a predefined resource type.
+        /// For standard resource types, see <see href="https://learn.microsoft.com/en-us/windows/win32/menurc/resource-types">Resource Types</see>.
+        /// For more information, see the <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nc-libloaderapi-enumresnameprocw#remarks">Remarks</see> section.</param>
+        /// <param name="lpName">The name of a resource of the type being enumerated.
+        /// Alternately, rather than a pointer, this parameter can be <c>MAKEINTRESOURCE(ID)</c>, where ID is the integer identifier of the resource.
+        /// For more information, see the <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nc-libloaderapi-enumresnameprocw#remarks">Remarks</see> section.</param>
+        /// <param name="lParam">An application-defined parameter
+        /// passed to the <see cref="SafeNativeMethods.EnumResourceNames(IntPtr, IntPtr, EnumResourceNameProc, IntPtr)"/>
+        /// or <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-enumresourcenamesexw">EnumResourceNamesEx</see> function.
+        /// This parameter can be used in error checking.</param>
+        /// <returns>Returns true to continue enumeration or false to stop enumeration.</returns>
+        /// <remarks>
+        /// <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nc-libloaderapi-enumresnameprocw"/>
+        /// </remarks>
+        [UnmanagedFunctionPointer(CallingConvention.Winapi, CharSet = CharSet.Unicode, SetLastError = true)]
+        [SuppressUnmanagedCodeSecurity]
+        internal delegate bool EnumResourceNameProc(IntPtr hModule, IntPtr lpType, IntPtr lpName, IntPtr lParam);
+
+        /// <summary>
+        /// Flag values of the third argument of <see cref="SafeNativeMethods.LoadLibraryEx(string, IntPtr, LoadLibraryFlags)"/>.
+        /// </summary>
+        [Flags]
+        internal enum LoadLibraryFlags : uint
+        {
+            /// <summary>
+            /// If this value is used, the system maps the file into the calling process's virtual address space as if it were a data file.
+            /// </summary>
+            LoadLibraryAsDatafile = 0x00000002
+        }
+        /// <summary>
+        /// Enum of resouce type.
+        /// </summary>
+        internal enum ResourceType
+        {
+            /// <summary>
+            /// Hardware-dependent icon resource.
+            /// </summary>
+            Icon = 3,
+            /// <summary>
+            /// Hardware-independent icon resource.
+            /// </summary>
+            GroupIcon = 14
+        }
+
+        /// <summary>
+        /// Get all icon data from specified file.
+        /// </summary>
+        /// <param name="filePath">A file path of executable file (.exe) or dynamic link file (.dll)</param>
+        /// <returns>All icon data list.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="filePath"/> is null.</exception>
+        /// <exception cref="Win32Exception">Thrown when any of Win32 API methods is failed.</exception>
+        public static List<byte[]> GetAllIconData(string filePath)
+        {
+#if NET7_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(filePath);
+#else
+            if (filePath == null)
+            {
+                throw new ArgumentNullException("filePath");
+            }
+#endif  // NET7_0_OR_GREATER
+
+            var hModule = IntPtr.Zero;
+            try
+            {
+                hModule = SafeNativeMethods.LoadLibraryEx(filePath, IntPtr.Zero, LoadLibraryFlags.LoadLibraryAsDatafile);
+                if (hModule == IntPtr.Zero)
+                {
+                    throw new Win32Exception();
+                }
+
+                // Enumerate the icon resource and build .ico files in memory.
+                var iconDataList = new List<byte[]>();
+
+                SafeNativeMethods.EnumResourceNames(hModule, (IntPtr)ResourceType.GroupIcon, (hModule2, lpType, lpName, lParam) =>
+                {
+                    // Refer to the following URL for the data structures used here:
+                    // http://msdn.microsoft.com/en-us/library/ms997538.aspx
+
+                    // RT_GROUP_ICON resource consists of a GRPICONDIR and GRPICONDIRENTRY's.
+                    var dir = GetDataFromResource(hModule2, (IntPtr)ResourceType.GroupIcon, lpName);
+
+                    // Calculate the size of an entire .icon file.
+                    var count = (int)BitConverter.ToUInt16(dir, 4);  // GRPICONDIR.idCount
+                    var len = 6 + 16 * count;  // sizeof(ICONDIR) + sizeof(ICONDIRENTRY) * count
+                    for (int i = 0; i < count; i++)
+                    {
+                        len += BitConverter.ToInt32(dir, 6 + 14 * i + 8);  // GRPICONDIRENTRY.dwBytesInRes
+                    }
+
+                    using (var dst = new BinaryWriter(new MemoryStream(len)))
+                    {
+                        // Copy GRPICONDIR to ICONDIR.
+                        dst.Write(dir, 0, 6);
+
+                        var picOffset = 6 + 16 * count;  // sizeof(ICONDIR) + sizeof(ICONDIRENTRY) * count
+
+                        for (int i = 0; i < count; i++)
+                        {
+                            //
+                            // Load the picture.
+                            //
+                            var id = BitConverter.ToUInt16(dir, 6 + 14 * i + 12);  // GRPICONDIRENTRY.nID
+                            var pic = GetDataFromResource(hModule2, (IntPtr)ResourceType.Icon, (IntPtr)id);
+                            //
+                            // Copy GRPICONDIRENTRY to ICONDIRENTRY.
+                            //
+                            dst.Seek(6 + 16 * i, SeekOrigin.Begin);
+                            dst.Write(dir, 6 + 14 * i, 8);  // First 8bytes are identical.
+                            dst.Write(pic.Length);  // ICONDIRENTRY.dwBytesInRes
+                            dst.Write(picOffset);  // ICONDIRENTRY.dwImageOffset
+                            //
+                            // Copy a picture.
+                            //
+                            dst.Seek(picOffset, SeekOrigin.Begin);
+                            dst.Write(pic, 0, pic.Length);
+
+                            picOffset += pic.Length;
+                        }
+
+                        iconDataList.Add(((MemoryStream)dst.BaseStream).ToArray());
+                    }
+
+                    return true;
+                }, IntPtr.Zero);
+
+                return iconDataList;
+            }
+            finally
+            {
+                if (hModule != IntPtr.Zero)
+                {
+                    SafeNativeMethods.FreeLibrary(hModule);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Get data from resource in module.
+        /// </summary>
+        /// <param name="hModule">Target module.</param>
+        /// <param name="type">The resouce type.</param>
+        /// <param name="id">The resource ID.</param>
+        /// <returns><see cref="byte"/> array of the resouce data.</returns>
+        /// <exception cref="Win32Exception">Thrown when any of Win32 API methods is failed.</exception>
+        private static byte[] GetDataFromResource(IntPtr hModule, IntPtr type, IntPtr id)
+        {
+            var hResInfo = SafeNativeMethods.FindResource(hModule, id, type);
+            if (hResInfo == IntPtr.Zero)
+            {
+                throw new Win32Exception();
+            }
+
+            var hResData = SafeNativeMethods.LoadResource(hModule, hResInfo);
+            if (hResData == IntPtr.Zero)
+            {
+                throw new Win32Exception();
+            }
+
+            var pResData = SafeNativeMethods.LockResource(hResData);
+            if (pResData == IntPtr.Zero)
+            {
+                throw new Win32Exception();
+            }
+
+            var size = SafeNativeMethods.SizeofResource(hModule, hResInfo);
+            if (size == 0)
+            {
+                throw new Win32Exception();
+            }
+
+            var buf = new byte[size];
+            Marshal.Copy(pResData, buf, 0, buf.Length);
+
+            return buf;
+        }
+
+        /// <summary>
+        /// Provides some native methods.
+        /// </summary>
+        [SuppressUnmanagedCodeSecurity]
+#if SUPPORT_LIBRARY_IMPORT
+        internal static partial class SafeNativeMethods
+#else
+        internal static class SafeNativeMethods
 #endif  // SUPPORT_LIBRARY_IMPORT
         {
             /// <summary>
-            /// An application-defined callback function used
-            /// with the <see cref="SafeNativeMethods.EnumResourceNames(IntPtr, IntPtr, EnumResourceNameProc, IntPtr)"/>
-            /// and <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-enumresourcenamesexw">EnumResourceNamesEx</see> functions.
-            /// It receives the type and name of a resource.
-            /// The <see cref="EnumResourceNameProc"/> type defines a delegate of this callback method.
-            /// EnumResNameProc is a placeholder for the application-defined function name.
+            /// Loads the specified module into the address space of the calling process.
+            /// The specified module may cause other modules to be loaded.
             /// </summary>
-            /// <param name="hModule">A handle to the module whose executable file contains the resources that are being enumerated.
-            /// If this parameter is <see cref="IntPtr.Zero"/>, the function enumerates the resource names in the module used to create the current process.</param>
-            /// <param name="lpType">The type of resource for which the name is being enumerated.
-            /// Alternately, rather than a pointer, this parameter can be <c>MAKEINTRESOURCE(ID)</c>, where ID is an integer value representing a predefined resource type.
-            /// For standard resource types, see <see href="https://learn.microsoft.com/en-us/windows/win32/menurc/resource-types">Resource Types</see>.
-            /// For more information, see the <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nc-libloaderapi-enumresnameprocw#remarks">Remarks</see> section.</param>
-            /// <param name="lpName">The name of a resource of the type being enumerated.
-            /// Alternately, rather than a pointer, this parameter can be <c>MAKEINTRESOURCE(ID)</c>, where ID is the integer identifier of the resource.
-            /// For more information, see the <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nc-libloaderapi-enumresnameprocw#remarks">Remarks</see> section.</param>
-            /// <param name="lParam">An application-defined parameter
-            /// passed to the <see cref="SafeNativeMethods.EnumResourceNames(IntPtr, IntPtr, EnumResourceNameProc, IntPtr)"/>
-            /// or <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-enumresourcenamesexw">EnumResourceNamesEx</see> function.
-            /// This parameter can be used in error checking.</param>
-            /// <returns>Returns true to continue enumeration or false to stop enumeration.</returns>
+            /// <param name="fileName">A string that specifies the file name of the module to load.
+            /// This name is not related to the name stored in a library module itself,
+            /// as specified by the LIBRARY keyword in the module-definition (.def) file.</param>
+            /// <param name="hFile">This parameter is reserved for future use. It must be <see cref="IntPtr.Zero"/>.</param>
+            /// <param name="dwFlags">The action to be taken when loading the module.
+            /// If no flags are specified, the behavior of this function is identical to that of the LoadLibrary function.
+            /// This parameter can be one of the values shown <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadlibraryexw">here</see>.</param>
+            /// <returns>
+            /// <para>If the function succeeds, the return value is a handle to the loaded module.</para>
+            /// <para>If the function fails, the return value is <see cref="IntPtr.Zero"/>.
+            /// To get extended error information, call <see cref="Marshal.GetLastWin32Error"/>.</para>
+            /// </returns>
             /// <remarks>
-            /// <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nc-libloaderapi-enumresnameprocw"/>
+            /// <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadlibraryexw"/>
             /// </remarks>
-            [UnmanagedFunctionPointer(CallingConvention.Winapi, CharSet = CharSet.Unicode, SetLastError = true)]
-            [SuppressUnmanagedCodeSecurity]
-            internal delegate bool EnumResourceNameProc(IntPtr hModule, IntPtr lpType, IntPtr lpName, IntPtr lParam);
+#if SUPPORT_LIBRARY_IMPORT
+            [LibraryImport("kernel32.dll", EntryPoint = "LoadLibraryExW", StringMarshalling = StringMarshalling.Utf16, SetLastError = true)]
+            public static partial IntPtr LoadLibraryEx(string fileName, IntPtr hFile, LoadLibraryFlags dwFlags);
+#else
+            [DllImport("kernel32.dll", EntryPoint = "LoadLibraryExW", ExactSpelling = true, CharSet = CharSet.Unicode, SetLastError = true)]
+            public static extern IntPtr LoadLibraryEx(string fileName, IntPtr hFile, LoadLibraryFlags dwFlags);
+#endif  // SUPPORT_LIBRARY_IMPORT
 
             /// <summary>
-            /// Flag values of the third argument of <see cref="SafeNativeMethods.LoadLibraryEx(string, IntPtr, LoadLibraryFlags)"/>.
+            /// Frees the loaded dynamic-link library (DLL) module and, if necessary, decrements its reference count.
+            /// When the reference count reaches zero, the module is unloaded from the address space of the calling process and the handle is no longer valid.
             /// </summary>
-            [Flags]
-            internal enum LoadLibraryFlags : uint
-            {
-                /// <summary>
-                /// If this value is used, the system maps the file into the calling process's virtual address space as if it were a data file.
-                /// </summary>
-                LoadLibraryAsDatafile = 0x00000002
-            }
-            /// <summary>
-            /// Enum of resouce type.
-            /// </summary>
-            internal enum ResourceType
-            {
-                /// <summary>
-                /// Hardware-dependent icon resource.
-                /// </summary>
-                Icon = 3,
-                /// <summary>
-                /// Hardware-independent icon resource.
-                /// </summary>
-                GroupIcon = 14
-            }
-
-            /// <summary>
-            /// Get all icon data from specified file.
-            /// </summary>
-            /// <param name="filePath">A file path of executable file (.exe) or dynamic link file (.dll)</param>
-            /// <returns>All icon data list.</returns>
-            /// <exception cref="ArgumentNullException">Thrown when <paramref name="filePath"/> is null.</exception>
-            /// <exception cref="Win32Exception">Thrown when any of Win32 API methods is failed.</exception>
-            public static List<byte[]> GetAllIconData(string filePath)
-            {
-#if NET7_0_OR_GREATER
-                ArgumentNullException.ThrowIfNull(filePath);
+            /// <param name="hModule">A handle to the loaded library module.
+            /// The <see href="https://learn.microsoft.com/en-us/windows/desktop/api/libloaderapi/nf-libloaderapi-loadlibraryw">LoadLibrary</see>,
+            /// <see cref="LoadLibraryEx"/>,
+            /// <see href="https://learn.microsoft.com/en-us/windows/desktop/api/libloaderapi/nf-libloaderapi-getmodulehandlew">GetModuleHandle</see>,
+            /// or <see href="https://learn.microsoft.com/en-us/windows/desktop/api/libloaderapi/nf-libloaderapi-getmodulehandleexw">GetModuleHandleEx</see> function returns this handle.</param>
+            /// <returns>
+            /// <para>If the function succeeds, the return value is true.</para>
+            /// <para>If the function fails, the return value is false.
+            /// To get extended error information, call the <see cref="Marshal.GetLastWin32Error"/> function.</para>
+            /// </returns>
+            /// <remarks>
+            /// <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-freelibrary"/>
+            /// </remarks>
+#if SUPPORT_LIBRARY_IMPORT
+            [LibraryImport("kernel32.dll", EntryPoint = "FreeLibrary", SetLastError = true)]
+            [return: MarshalAs(UnmanagedType.Bool)]
+            public static partial bool FreeLibrary(IntPtr hModule);
 #else
-                if (filePath == null)
-                {
-                    throw new ArgumentNullException("filePath");
-                }
-#endif  // NET7_0_OR_GREATER
-
-                var hModule = IntPtr.Zero;
-                try
-                {
-                    hModule = SafeNativeMethods.LoadLibraryEx(filePath, IntPtr.Zero, LoadLibraryFlags.LoadLibraryAsDatafile);
-                    if (hModule == IntPtr.Zero)
-                    {
-                        throw new Win32Exception();
-                    }
-
-                    // Enumerate the icon resource and build .ico files in memory.
-                    var iconDataList = new List<byte[]>();
-
-                    SafeNativeMethods.EnumResourceNames(hModule, (IntPtr)ResourceType.GroupIcon, (hModule2, lpType, lpName, lParam) =>
-                    {
-                        // Refer to the following URL for the data structures used here:
-                        // http://msdn.microsoft.com/en-us/library/ms997538.aspx
-
-                        // RT_GROUP_ICON resource consists of a GRPICONDIR and GRPICONDIRENTRY's.
-                        var dir = GetDataFromResource(hModule2, (IntPtr)ResourceType.GroupIcon, lpName);
-
-                        // Calculate the size of an entire .icon file.
-                        var count = (int)BitConverter.ToUInt16(dir, 4);  // GRPICONDIR.idCount
-                        var len = 6 + 16 * count;  // sizeof(ICONDIR) + sizeof(ICONDIRENTRY) * count
-                        for (int i = 0; i < count; i++)
-                        {
-                            len += BitConverter.ToInt32(dir, 6 + 14 * i + 8);  // GRPICONDIRENTRY.dwBytesInRes
-                        }
-
-                        using (var dst = new BinaryWriter(new MemoryStream(len)))
-                        {
-                            // Copy GRPICONDIR to ICONDIR.
-                            dst.Write(dir, 0, 6);
-
-                            var picOffset = 6 + 16 * count;  // sizeof(ICONDIR) + sizeof(ICONDIRENTRY) * count
-
-                            for (int i = 0; i < count; i++)
-                            {
-                                //
-                                // Load the picture.
-                                //
-                                var id = BitConverter.ToUInt16(dir, 6 + 14 * i + 12);  // GRPICONDIRENTRY.nID
-                                var pic = GetDataFromResource(hModule2, (IntPtr)ResourceType.Icon, (IntPtr)id);
-                                //
-                                // Copy GRPICONDIRENTRY to ICONDIRENTRY.
-                                //
-                                dst.Seek(6 + 16 * i, SeekOrigin.Begin);
-                                dst.Write(dir, 6 + 14 * i, 8);  // First 8bytes are identical.
-                                dst.Write(pic.Length);  // ICONDIRENTRY.dwBytesInRes
-                                dst.Write(picOffset);  // ICONDIRENTRY.dwImageOffset
-                                //
-                                // Copy a picture.
-                                //
-                                dst.Seek(picOffset, SeekOrigin.Begin);
-                                dst.Write(pic, 0, pic.Length);
-
-                                picOffset += pic.Length;
-                            }
-
-                            iconDataList.Add(((MemoryStream)dst.BaseStream).ToArray());
-                        }
-
-                        return true;
-                    }, IntPtr.Zero);
-
-                    return iconDataList;
-                }
-                finally
-                {
-                    if (hModule != IntPtr.Zero)
-                    {
-                        SafeNativeMethods.FreeLibrary(hModule);
-                    }
-                }
-            }
+            [DllImport("kernel32.dll", EntryPoint = "FreeLibrary", ExactSpelling = true, SetLastError = true)]
+            [return: MarshalAs(UnmanagedType.Bool)]
+            public static extern bool FreeLibrary(IntPtr hModule);
+#endif  // SUPPORT_LIBRARY_IMPORT
 
             /// <summary>
-            /// Get data from resource in module.
+            /// Enumerates resources of a specified type within a binary module.
+            /// For Windows Vista and later, this is typically a <see href="https://learn.microsoft.com/en-us/windows/win32/intl/mui-resource-management">language-neutral Portable Executable</see> (LN file),
+            /// and the enumeration will also include resources from the corresponding language-specific resource files (.mui files)
+            /// that contain localizable language resources.
+            /// It is also possible for hModule to specify an .mui file, in which case only that file is searched for resources.
             /// </summary>
-            /// <param name="hModule">Target module.</param>
-            /// <param name="type">The resouce type.</param>
-            /// <param name="id">The resource ID.</param>
-            /// <returns><see cref="byte"/> array of the resouce data.</returns>
-            /// <exception cref="Win32Exception">Thrown when any of Win32 API methods is failed.</exception>
-            private static byte[] GetDataFromResource(IntPtr hModule, IntPtr type, IntPtr id)
-            {
-                var hResInfo = SafeNativeMethods.FindResource(hModule, id, type);
-                if (hResInfo == IntPtr.Zero)
-                {
-                    throw new Win32Exception();
-                }
-
-                var hResData = SafeNativeMethods.LoadResource(hModule, hResInfo);
-                if (hResData == IntPtr.Zero)
-                {
-                    throw new Win32Exception();
-                }
-
-                var pResData = SafeNativeMethods.LockResource(hResData);
-                if (pResData == IntPtr.Zero)
-                {
-                    throw new Win32Exception();
-                }
-
-                var size = SafeNativeMethods.SizeofResource(hModule, hResInfo);
-                if (size == 0)
-                {
-                    throw new Win32Exception();
-                }
-
-                var buf = new byte[size];
-                Marshal.Copy(pResData, buf, 0, buf.Length);
-
-                return buf;
-            }
+            /// <param name="hModule">
+            /// <para>A handle to a module to be searched.
+            /// Starting with Windows Vista, if this is an LN file, then appropriate .mui files (if any exist) are included in the search.</para>
+            /// <para>If this parameter is <see cref="IntPtr.Zero"/>, that is equivalent to passing in a handle to the module used to create the current process.</para>
+            /// </param>
+            /// <param name="lpType">The type of the resource for which the name is being enumerated.
+            /// Alternately, rather than a pointer, this parameter can be <see href="https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-makeintresourcew">MAKEINTRESOURCE</see>(ID),
+            /// where ID is an integer value representing a predefined resource type.
+            /// For a list of predefined resource types, see <see href="https://learn.microsoft.com/en-us/windows/win32/menurc/resource-types">Resource Types</see>.
+            /// For more information, see the <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-enumresourcenamesw#remarks">Remarks</see> section.</param>
+            /// <param name="enumFunc">A delegate of the callback function to be called for each enumerated resource name or ID.
+            /// For more information, see <see cref="EnumResourceNameProc"/>.</param>
+            /// <param name="lParam">An application-defined value passed to the callback function.
+            /// This parameter can be used in error checking.</param>
+            /// <returns>The return value is true if the function succeeds or false if the function does not find a resource of the type specified,
+            /// or if the function fails for another reason.
+            /// To get extended error information, call <see cref="Marshal.GetLastWin32Error"/>.</returns>
+            /// <remarks>
+            /// <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-enumresourcenamesw"/>
+            /// </remarks>
+#if SUPPORT_LIBRARY_IMPORT
+            [LibraryImport("kernel32.dll", EntryPoint = "EnumResourceNamesW", SetLastError = true)]
+            [return: MarshalAs(UnmanagedType.Bool)]
+            public static partial bool EnumResourceNames(IntPtr hModule, IntPtr lpType, EnumResourceNameProc enumFunc, IntPtr lParam);
+#else
+            [DllImport("kernel32.dll", EntryPoint = "EnumResourceNamesW", ExactSpelling = true, CharSet = CharSet.Unicode, SetLastError = true)]
+            [return: MarshalAs(UnmanagedType.Bool)]
+            public static extern bool EnumResourceNames(IntPtr hModule, IntPtr lpType, EnumResourceNameProc enumFunc, IntPtr lParam);
+#endif  // SUPPORT_LIBRARY_IMPORT
 
             /// <summary>
-            /// Provides some native methods.
+            /// <para>Determines the location of a resource with the specified type and name in the specified module.</para>
+            /// <para>To specify a language, use the <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-findresourceexw">FindResourceEx</see> function.</para>
             /// </summary>
-            [SuppressUnmanagedCodeSecurity]
+            /// <param name="hModule">A handle to the module whose portable executable file or an accompanying MUI file contains the resource.
+            /// If this parameter is <see cref="IntPtr.Zero"/>, the function searches the module used to create the current process.</param>
+            /// <param name="lpName">The resource type.
+            /// Alternately, rather than a pointer, this parameter can be <see href="https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-makeintresourcew">MAKEINTRESOURCE</see>(ID),
+            /// where ID is the integer identifier of the given resource type.
+            /// For more information, see the <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-findresourceexw#remarks">Remarks</see> section.</param>
+            /// <param name="lpType">
+            /// <para>The resource type.
+            /// Alternately, rather than a pointer, this parameter can be <see href="https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-makeintresourcew">MAKEINTRESOURCE</see>(ID),
+            /// where ID is the integer identifier of the given</para>
+            /// <para>resource type.
+            /// For standard resource types, see <see href="https://learn.microsoft.com/en-us/windows/win32/menurc/resource-types">Resource Types</see>.
+            /// For more information, see the <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-findresourceexw#remarks">Remarks</see> section.</para>
+            /// </param>
+            /// <returns>
+            /// <para>If the function succeeds, the return value is a handle to the specified resource's information block.
+            /// To obtain a handle to the resource, pass this handle to the <see cref="LoadResource(IntPtr, IntPtr)"/> function.</para>
+            /// <para>If the function fails, the return value is <see cref="IntPtr.Zero"/>.
+            /// To get extended error information, call <see cref="Marshal.GetLastWin32Error"/>.</para>
+            /// </returns>
+            /// <remarks>
+            /// <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-findresourcew"/>
+            /// </remarks>
 #if SUPPORT_LIBRARY_IMPORT
-            internal static partial class SafeNativeMethods
+            [LibraryImport("kernel32.dll", EntryPoint = "FindResourceW", SetLastError = true)]
+            public static partial IntPtr FindResource(IntPtr hModule, IntPtr lpName, IntPtr lpType);
 #else
-            internal static class SafeNativeMethods
-#endif  // SUPPORT_LIBRARY_IMPORT
-            {
-                /// <summary>
-                /// Loads the specified module into the address space of the calling process.
-                /// The specified module may cause other modules to be loaded.
-                /// </summary>
-                /// <param name="fileName">A string that specifies the file name of the module to load.
-                /// This name is not related to the name stored in a library module itself,
-                /// as specified by the LIBRARY keyword in the module-definition (.def) file.</param>
-                /// <param name="hFile">This parameter is reserved for future use. It must be <see cref="IntPtr.Zero"/>.</param>
-                /// <param name="dwFlags">The action to be taken when loading the module.
-                /// If no flags are specified, the behavior of this function is identical to that of the LoadLibrary function.
-                /// This parameter can be one of the values shown <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadlibraryexw">here</see>.</param>
-                /// <returns>
-                /// <para>If the function succeeds, the return value is a handle to the loaded module.</para>
-                /// <para>If the function fails, the return value is <see cref="IntPtr.Zero"/>.
-                /// To get extended error information, call <see cref="Marshal.GetLastWin32Error"/>.</para>
-                /// </returns>
-                /// <remarks>
-                /// <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadlibraryexw"/>
-                /// </remarks>
-#if SUPPORT_LIBRARY_IMPORT
-                [LibraryImport("kernel32.dll", EntryPoint = "LoadLibraryExW", StringMarshalling = StringMarshalling.Utf16, SetLastError = true)]
-                public static partial IntPtr LoadLibraryEx(string fileName, IntPtr hFile, LoadLibraryFlags dwFlags);
-#else
-                [DllImport("kernel32.dll", EntryPoint = "LoadLibraryExW", ExactSpelling = true, CharSet = CharSet.Unicode, SetLastError = true)]
-                public static extern IntPtr LoadLibraryEx(string fileName, IntPtr hFile, LoadLibraryFlags dwFlags);
+            [DllImport("kernel32.dll", EntryPoint = "FindResourceW", ExactSpelling = true, CharSet = CharSet.Unicode, SetLastError = true)]
+            public static extern IntPtr FindResource(IntPtr hModule, IntPtr lpName, IntPtr lpType);
 #endif  // SUPPORT_LIBRARY_IMPORT
 
-                /// <summary>
-                /// Frees the loaded dynamic-link library (DLL) module and, if necessary, decrements its reference count.
-                /// When the reference count reaches zero, the module is unloaded from the address space of the calling process and the handle is no longer valid.
-                /// </summary>
-                /// <param name="hModule">A handle to the loaded library module.
-                /// The <see href="https://learn.microsoft.com/en-us/windows/desktop/api/libloaderapi/nf-libloaderapi-loadlibraryw">LoadLibrary</see>,
-                /// <see cref="LoadLibraryEx"/>,
-                /// <see href="https://learn.microsoft.com/en-us/windows/desktop/api/libloaderapi/nf-libloaderapi-getmodulehandlew">GetModuleHandle</see>,
-                /// or <see href="https://learn.microsoft.com/en-us/windows/desktop/api/libloaderapi/nf-libloaderapi-getmodulehandleexw">GetModuleHandleEx</see> function returns this handle.</param>
-                /// <returns>
-                /// <para>If the function succeeds, the return value is true.</para>
-                /// <para>If the function fails, the return value is false.
-                /// To get extended error information, call the <see cref="Marshal.GetLastWin32Error"/> function.</para>
-                /// </returns>
-                /// <remarks>
-                /// <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-freelibrary"/>
-                /// </remarks>
+            /// <summary>
+            /// Retrieves a handle that can be used to obtain a pointer to the first byte of the specified resource in memory.
+            /// </summary>
+            /// <param name="hModule">A handle to the module whose executable file contains the resource.
+            /// If hModule is <see cref="IntPtr.Zero"/>, the system loads the resource from the module that was used to create the current process.</param>
+            /// <param name="hResInfo">A handle to the resource to be loaded. This handle is returned
+            /// by the <see cref="FindResource(IntPtr, IntPtr, IntPtr)"/>
+            /// or <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-findresourceexw">FindResourceEx</see> function.</param>
+            /// <returns>
+            /// <para>If the function succeeds, the return value is a handle to the data associated with the resource.</para>
+            /// <para>If the function fails, the return value is <see cref="IntPtr.Zero"/>.
+            /// To get extended error information, call <see cref="Marshal.GetLastWin32Error"/>.</para>
+            /// </returns>
+            /// <remarks>
+            /// <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadresource"/>
+            /// </remarks>
 #if SUPPORT_LIBRARY_IMPORT
-                [LibraryImport("kernel32.dll", EntryPoint = "FreeLibrary", SetLastError = true)]
-                [return: MarshalAs(UnmanagedType.Bool)]
-                public static partial bool FreeLibrary(IntPtr hModule);
+            [LibraryImport("kernel32.dll", EntryPoint = "LoadResource", SetLastError = true)]
+            public static partial IntPtr LoadResource(IntPtr hModule, IntPtr hResInfo);
 #else
-                [DllImport("kernel32.dll", EntryPoint = "FreeLibrary", ExactSpelling = true, SetLastError = true)]
-                [return: MarshalAs(UnmanagedType.Bool)]
-                public static extern bool FreeLibrary(IntPtr hModule);
+            [DllImport("kernel32.dll", EntryPoint = "LoadResource", ExactSpelling = true, SetLastError = true)]
+            public static extern IntPtr LoadResource(IntPtr hModule, IntPtr hResInfo);
 #endif  // SUPPORT_LIBRARY_IMPORT
 
-                /// <summary>
-                /// Enumerates resources of a specified type within a binary module.
-                /// For Windows Vista and later, this is typically a <see href="https://learn.microsoft.com/en-us/windows/win32/intl/mui-resource-management">language-neutral Portable Executable</see> (LN file),
-                /// and the enumeration will also include resources from the corresponding language-specific resource files (.mui files)
-                /// that contain localizable language resources.
-                /// It is also possible for hModule to specify an .mui file, in which case only that file is searched for resources.
-                /// </summary>
-                /// <param name="hModule">
-                /// <para>A handle to a module to be searched.
-                /// Starting with Windows Vista, if this is an LN file, then appropriate .mui files (if any exist) are included in the search.</para>
-                /// <para>If this parameter is <see cref="IntPtr.Zero"/>, that is equivalent to passing in a handle to the module used to create the current process.</para>
-                /// </param>
-                /// <param name="lpType">The type of the resource for which the name is being enumerated.
-                /// Alternately, rather than a pointer, this parameter can be <see href="https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-makeintresourcew">MAKEINTRESOURCE</see>(ID),
-                /// where ID is an integer value representing a predefined resource type.
-                /// For a list of predefined resource types, see <see href="https://learn.microsoft.com/en-us/windows/win32/menurc/resource-types">Resource Types</see>.
-                /// For more information, see the <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-enumresourcenamesw#remarks">Remarks</see> section.</param>
-                /// <param name="enumFunc">A delegate of the callback function to be called for each enumerated resource name or ID.
-                /// For more information, see <see cref="EnumResourceNameProc"/>.</param>
-                /// <param name="lParam">An application-defined value passed to the callback function.
-                /// This parameter can be used in error checking.</param>
-                /// <returns>The return value is true if the function succeeds or false if the function does not find a resource of the type specified,
-                /// or if the function fails for another reason.
-                /// To get extended error information, call <see cref="Marshal.GetLastWin32Error"/>.</returns>
-                /// <remarks>
-                /// <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-enumresourcenamesw"/>
-                /// </remarks>
+            /// <summary>
+            /// Retrieves a pointer to the specified resource in memory.
+            /// </summary>
+            /// <param name="hResData">A handle to the resource to be accessed.
+            /// The <see cref="LoadResource(IntPtr, IntPtr)"/> function returns this handle.
+            /// Note that this parameter is listed as an HGLOBAL variable only for backward compatibility.
+            /// Do not pass any value as a parameter other than a successful return value from the <see cref="LoadResource(IntPtr, IntPtr)"/> function.</param>
+            /// <returns></returns>
+            /// <remarks>
+            /// <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-lockresource"/>
+            /// </remarks>
 #if SUPPORT_LIBRARY_IMPORT
-                [LibraryImport("kernel32.dll", EntryPoint = "EnumResourceNamesW", SetLastError = true)]
-                [return: MarshalAs(UnmanagedType.Bool)]
-                public static partial bool EnumResourceNames(IntPtr hModule, IntPtr lpType, EnumResourceNameProc enumFunc, IntPtr lParam);
+            [LibraryImport("kernel32.dll", EntryPoint = "LockResource", SetLastError = true)]
+            public static partial IntPtr LockResource(IntPtr hResData);
 #else
-                [DllImport("kernel32.dll", EntryPoint = "EnumResourceNamesW", ExactSpelling = true, CharSet = CharSet.Unicode, SetLastError = true)]
-                [return: MarshalAs(UnmanagedType.Bool)]
-                public static extern bool EnumResourceNames(IntPtr hModule, IntPtr lpType, EnumResourceNameProc enumFunc, IntPtr lParam);
+            [DllImport("kernel32.dll", EntryPoint = "LockResource", ExactSpelling = true, SetLastError = true)]
+            public static extern IntPtr LockResource(IntPtr hResData);
 #endif  // SUPPORT_LIBRARY_IMPORT
 
-                /// <summary>
-                /// <para>Determines the location of a resource with the specified type and name in the specified module.</para>
-                /// <para>To specify a language, use the <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-findresourceexw">FindResourceEx</see> function.</para>
-                /// </summary>
-                /// <param name="hModule">A handle to the module whose portable executable file or an accompanying MUI file contains the resource.
-                /// If this parameter is <see cref="IntPtr.Zero"/>, the function searches the module used to create the current process.</param>
-                /// <param name="lpName">The resource type.
-                /// Alternately, rather than a pointer, this parameter can be <see href="https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-makeintresourcew">MAKEINTRESOURCE</see>(ID),
-                /// where ID is the integer identifier of the given resource type.
-                /// For more information, see the <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-findresourceexw#remarks">Remarks</see> section.</param>
-                /// <param name="lpType">
-                /// <para>The resource type.
-                /// Alternately, rather than a pointer, this parameter can be <see href="https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-makeintresourcew">MAKEINTRESOURCE</see>(ID),
-                /// where ID is the integer identifier of the given</para>
-                /// <para>resource type.
-                /// For standard resource types, see <see href="https://learn.microsoft.com/en-us/windows/win32/menurc/resource-types">Resource Types</see>.
-                /// For more information, see the <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-findresourceexw#remarks">Remarks</see> section.</para>
-                /// </param>
-                /// <returns>
-                /// <para>If the function succeeds, the return value is a handle to the specified resource's information block.
-                /// To obtain a handle to the resource, pass this handle to the <see cref="LoadResource(IntPtr, IntPtr)"/> function.</para>
-                /// <para>If the function fails, the return value is <see cref="IntPtr.Zero"/>.
-                /// To get extended error information, call <see cref="Marshal.GetLastWin32Error"/>.</para>
-                /// </returns>
-                /// <remarks>
-                /// <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-findresourcew"/>
-                /// </remarks>
+            /// <summary>
+            /// Retrieves the size, in bytes, of the specified resource.
+            /// </summary>
+            /// <param name="hModule">A handle to the module whose executable file contains the resource.
+            /// Default is the module used to create the current process.</param>
+            /// <param name="hResInfo">A handle to the resource.
+            /// This handle must be created by using the <see cref="FindResource(IntPtr, IntPtr, IntPtr)"/>
+            /// or <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-findresourceexw">FindResourceEx</see> function.</param>
+            /// <returns>
+            /// <para>If the function succeeds, the return value is the number of bytes in the resource.</para>
+            /// <para>If the function fails, the return value is zero.
+            /// To get extended error information, call <see cref="Marshal.GetLastWin32Error"/>.</para>
+            /// </returns>
+            /// <remarks>
+            /// <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-sizeofresource"/>
+            /// </remarks>
 #if SUPPORT_LIBRARY_IMPORT
-                [LibraryImport("kernel32.dll", EntryPoint = "FindResourceW", SetLastError = true)]
-                public static partial IntPtr FindResource(IntPtr hModule, IntPtr lpName, IntPtr lpType);
+            [LibraryImport("kernel32.dll", EntryPoint = "SizeofResource", SetLastError = true)]
+            public static partial uint SizeofResource(IntPtr hModule, IntPtr hResInfo);
 #else
-                [DllImport("kernel32.dll", EntryPoint = "FindResourceW", ExactSpelling = true, CharSet = CharSet.Unicode, SetLastError = true)]
-                public static extern IntPtr FindResource(IntPtr hModule, IntPtr lpName, IntPtr lpType);
+            [DllImport("kernel32.dll", EntryPoint = "SizeofResource", ExactSpelling = true, SetLastError = true)]
+            public static extern uint SizeofResource(IntPtr hModule, IntPtr hResInfo);
 #endif  // SUPPORT_LIBRARY_IMPORT
-
-                /// <summary>
-                /// Retrieves a handle that can be used to obtain a pointer to the first byte of the specified resource in memory.
-                /// </summary>
-                /// <param name="hModule">A handle to the module whose executable file contains the resource.
-                /// If hModule is <see cref="IntPtr.Zero"/>, the system loads the resource from the module that was used to create the current process.</param>
-                /// <param name="hResInfo">A handle to the resource to be loaded. This handle is returned
-                /// by the <see cref="FindResource(IntPtr, IntPtr, IntPtr)"/>
-                /// or <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-findresourceexw">FindResourceEx</see> function.</param>
-                /// <returns>
-                /// <para>If the function succeeds, the return value is a handle to the data associated with the resource.</para>
-                /// <para>If the function fails, the return value is <see cref="IntPtr.Zero"/>.
-                /// To get extended error information, call <see cref="Marshal.GetLastWin32Error"/>.</para>
-                /// </returns>
-                /// <remarks>
-                /// <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadresource"/>
-                /// </remarks>
-#if SUPPORT_LIBRARY_IMPORT
-                [LibraryImport("kernel32.dll", EntryPoint = "LoadResource", SetLastError = true)]
-                public static partial IntPtr LoadResource(IntPtr hModule, IntPtr hResInfo);
-#else
-                [DllImport("kernel32.dll", EntryPoint = "LoadResource", ExactSpelling = true, SetLastError = true)]
-                public static extern IntPtr LoadResource(IntPtr hModule, IntPtr hResInfo);
-#endif  // SUPPORT_LIBRARY_IMPORT
-
-                /// <summary>
-                /// Retrieves a pointer to the specified resource in memory.
-                /// </summary>
-                /// <param name="hResData">A handle to the resource to be accessed.
-                /// The <see cref="LoadResource(IntPtr, IntPtr)"/> function returns this handle.
-                /// Note that this parameter is listed as an HGLOBAL variable only for backward compatibility.
-                /// Do not pass any value as a parameter other than a successful return value from the <see cref="LoadResource(IntPtr, IntPtr)"/> function.</param>
-                /// <returns></returns>
-                /// <remarks>
-                /// <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-lockresource"/>
-                /// </remarks>
-#if SUPPORT_LIBRARY_IMPORT
-                [LibraryImport("kernel32.dll", EntryPoint = "LockResource", SetLastError = true)]
-                public static partial IntPtr LockResource(IntPtr hResData);
-#else
-                [DllImport("kernel32.dll", EntryPoint = "LockResource", ExactSpelling = true, SetLastError = true)]
-                public static extern IntPtr LockResource(IntPtr hResData);
-#endif  // SUPPORT_LIBRARY_IMPORT
-
-                /// <summary>
-                /// Retrieves the size, in bytes, of the specified resource.
-                /// </summary>
-                /// <param name="hModule">A handle to the module whose executable file contains the resource.
-                /// Default is the module used to create the current process.</param>
-                /// <param name="hResInfo">A handle to the resource.
-                /// This handle must be created by using the <see cref="FindResource(IntPtr, IntPtr, IntPtr)"/>
-                /// or <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-findresourceexw">FindResourceEx</see> function.</param>
-                /// <returns>
-                /// <para>If the function succeeds, the return value is the number of bytes in the resource.</para>
-                /// <para>If the function fails, the return value is zero.
-                /// To get extended error information, call <see cref="Marshal.GetLastWin32Error"/>.</para>
-                /// </returns>
-                /// <remarks>
-                /// <see href="https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-sizeofresource"/>
-                /// </remarks>
-#if SUPPORT_LIBRARY_IMPORT
-                [LibraryImport("kernel32.dll", EntryPoint = "SizeofResource", SetLastError = true)]
-                public static partial uint SizeofResource(IntPtr hModule, IntPtr hResInfo);
-#else
-                [DllImport("kernel32.dll", EntryPoint = "SizeofResource", ExactSpelling = true, SetLastError = true)]
-                public static extern uint SizeofResource(IntPtr hModule, IntPtr hResInfo);
-#endif  // SUPPORT_LIBRARY_IMPORT
-            }
         }
-#endif  // USE_WIN32ICON_AS_FAVICON
     }
+#endif  // USE_WIN32ICON_AS_FAVICON
 }
