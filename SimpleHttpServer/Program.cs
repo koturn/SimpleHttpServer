@@ -399,6 +399,7 @@ namespace SimpleHttpServer
             {
                 try
                 {
+                    var rootFaviconPath = appOptions.PrefixRoot + "/favicon.ico";
                     while (listener.IsListening)
                     {
                         var context = listener.GetContext();  // Wait for request.
@@ -446,7 +447,7 @@ namespace SimpleHttpServer
                                     {
                                         if (entryPath.EndsWith(_dirSep))
                                         {
-                                            var indexPage = CreateIndexPage(entryPath, rawPath, appOptions.IsGenerateHtml5IndexPage);
+                                            var indexPage = CreateIndexPage(entryPath, rawPath, rootFaviconPath, appOptions.IsGenerateHtml5IndexPage);
                                             var content = Encoding.UTF8.GetBytes(indexPage);
                                             response.ContentType = "text/html";
                                             response.ContentLength64 = content.Length;
@@ -487,9 +488,9 @@ namespace SimpleHttpServer
                                     }
                                     else
                                     {
+#if USE_WIN32ICON_AS_FAVICON || USE_EMBEDDED_ICON_AS_FAVICON
                                         if (rawPath == "/favicon.ico")
                                         {
-#if USE_WIN32ICON_AS_FAVICON || USE_EMBEDDED_ICON_AS_FAVICON
                                             var content = GetSelfIconData();
                                             if (content.Length == 0)
                                             {
@@ -501,11 +502,10 @@ namespace SimpleHttpServer
                                                 response.ContentLength64 = content.Length;
                                                 response.OutputStream.Write(content, 0, content.Length);
                                             }
-#else
-                                            response.StatusCode = (int)HttpStatusCode.NotFound;
-#endif  // USE_WIN32ICON_AS_FAVICON || USE_EMBEDDED_ICON_AS_FAVICON
                                         }
-                                        else if (rawPath == "/.well-known/appspecific/com.chrome.devtools.json" && appOptions.AllowToGenerateChromeDevToolJson)
+                                        else
+#endif  // USE_WIN32ICON_AS_FAVICON || USE_EMBEDDED_ICON_AS_FAVICON
+                                        if (rawPath == "/.well-known/appspecific/com.chrome.devtools.json" && appOptions.AllowToGenerateChromeDevToolJson)
                                         {
                                             var chromeDevToolJson = CreateChromeDevToolJson(appOptions.LocalRootPath);
                                             var content = Encoding.UTF8.GetBytes(chromeDevToolJson);
@@ -739,11 +739,12 @@ namespace SimpleHttpServer
         /// </summary>
         /// <param name="path">Directory path.</param>
         /// <param name="urlPath">URL path.</param>
+        /// <param name="faviconPath">favicon.ico path.</param>
         /// <param name="isHtml5">True to create HTML5 index page, otherwise false (create HTML4.01 index page).</param>
         /// <returns>Index page HTML string.</returns>
-        private static string CreateIndexPage(string path, string urlPath, bool isHtml5 = true)
+        private static string CreateIndexPage(string path, string urlPath, string faviconPath, bool isHtml5 = true)
         {
-            return isHtml5 ? CreateHtml5IndexPage(path, urlPath) : CreateHtml4IndexPage(path, urlPath);
+            return isHtml5 ? CreateHtml5IndexPage(path, urlPath, faviconPath) : CreateHtml4IndexPage(path, urlPath, faviconPath);
         }
 
         /// <summary>
@@ -751,8 +752,9 @@ namespace SimpleHttpServer
         /// </summary>
         /// <param name="path">Directory path.</param>
         /// <param name="urlPath">URL path.</param>
+        /// <param name="faviconPath">favicon.ico path.</param>
         /// <returns>Index page HTML string.</returns>
-        private static string CreateHtml5IndexPage(string path, string urlPath)
+        private static string CreateHtml5IndexPage(string path, string urlPath, string faviconPath)
         {
             var encodedPath = WebUtility.HtmlEncode(urlPath);
             var sb = new StringBuilder("<!DOCTYPE html>\n")
@@ -763,9 +765,12 @@ namespace SimpleHttpServer
                 .Append("  <style>\n")
                 .Append("  .entry-item { font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Courier New', Courier, 'Liberation Mono', monospace; }\n")
                 .Append("  @media (prefers-color-scheme: dark) { body { color: #ffffff; background-color: #000000; } a:link { color: #7690ed; } a:visited { color: #7a6c87; } }\n")
-                .Append("  </style>\n")
-                .Append("  <link rel=\"shortcut icon\" href=\"favicon.ico\">\n")
-                .Append("</head>\n")
+                .Append("  </style>\n");
+            if (faviconPath != null)
+            {
+                sb.AppendFormat("  <link rel=\"shortcut icon\" href=\"{0}\">\n", faviconPath);
+            }
+            sb.Append("</head>\n")
                 .Append("<body>\n")
                 .AppendFormat("<h1>Directory listing for {0}</h1>\n", encodedPath)
                 .Append("<hr>\n");
@@ -784,8 +789,9 @@ namespace SimpleHttpServer
         /// </summary>
         /// <param name="path">Directory path.</param>
         /// <param name="urlPath">URL path.</param>
+        /// <param name="faviconPath">favicon.ico path.</param>
         /// <returns>Index page HTML string.</returns>
-        private static string CreateHtml4IndexPage(string path, string urlPath)
+        private static string CreateHtml4IndexPage(string path, string urlPath, string faviconPath)
         {
             var encodedPath = WebUtility.HtmlEncode(urlPath);
             var sb = new StringBuilder("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">\n")
@@ -796,9 +802,12 @@ namespace SimpleHttpServer
                 .AppendFormat("  <title>{0}</title>\n", encodedPath)
                 .Append("  <style type=\"text/css\"><!--\n")
                 .Append("  .entry-item { font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Courier New', Courier, 'Liberation Mono', monospace; }\n")
-                .Append("  --></style>\n")
-                .Append("  <link rel=\"shortcut icon\" href=\"favicon.ico\">\n")
-                .Append("</head>\n")
+                .Append("  --></style>\n");
+            if (faviconPath != null)
+            {
+                sb.AppendFormat("  <link rel=\"shortcut icon\" href=\"{0}\">\n", faviconPath);
+            }
+            sb.Append("</head>\n")
                 .Append("<body>\n")
                 .AppendFormat("<h1>Directory listing for {0}</h1>\n", encodedPath)
                 .Append("<hr>\n");
