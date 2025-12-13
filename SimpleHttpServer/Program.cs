@@ -428,10 +428,6 @@ namespace SimpleHttpServer
                                     }
 
                                     var entryPath = (appOptions.LocalRootPath + rawPath).Replace("/", _dirSep);
-                                    if (entryPath.EndsWith(_dirSep) && File.Exists(entryPath + "index.html"))
-                                    {
-                                        entryPath += "index.html";
-                                    }
 
                                     response.ContentLength64 = 0;
 
@@ -447,11 +443,20 @@ namespace SimpleHttpServer
                                     {
                                         if (entryPath.EndsWith(_dirSep))
                                         {
-                                            var indexPage = CreateIndexPage(entryPath, rawPath, rootFaviconPath, appOptions.IsGenerateHtml5IndexPage);
-                                            var content = Encoding.UTF8.GetBytes(indexPage);
                                             response.ContentType = "text/html";
-                                            response.ContentLength64 = content.Length;
-                                            response.OutputStream.Write(content, 0, content.Length);
+
+                                            var indexPath = entryPath + "index.html";
+                                            if (File.Exists(indexPath))
+                                            {
+                                                TransferFile(response, indexPath);
+                                            }
+                                            else
+                                            {
+                                                var indexPage = CreateIndexPage(entryPath, rawPath, rootFaviconPath, appOptions.IsGenerateHtml5IndexPage);
+                                                var content = Encoding.UTF8.GetBytes(indexPage);
+                                                response.ContentLength64 = content.Length;
+                                                response.OutputStream.Write(content, 0, content.Length);
+                                            }
                                         }
                                         else
                                         {
@@ -468,12 +473,7 @@ namespace SimpleHttpServer
 #else
                                             response.ContentType = MimeMapper.GetMimeType(entryPath);
 #endif  // USE_SYSTEM_WEB_MIME_MAPPING
-                                            var fileSize = new FileInfo(entryPath).Length;
-                                            using (var fs = new FileStream(entryPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, (int)Math.Min(81920, fileSize), FileOptions.SequentialScan))
-                                            {
-                                                response.ContentLength64 = fileSize;
-                                                fs.CopyTo(response.OutputStream);
-                                            }
+                                            TransferFile(response, entryPath);
                                         }
                                         catch (Exception ex)
                                         {
@@ -732,6 +732,21 @@ namespace SimpleHttpServer
         {
             var index = url.IndexOf('?');
             return index == -1 ? url : url.Substring(0, index);
+        }
+
+        /// <summary>
+        /// Transfer file content.
+        /// </summary>
+        /// <param name="response"><see cref="HttpListenerRequest"/> to transfer.</param>
+        /// <param name="filePath">File path to read from.</param>
+        private static void TransferFile(HttpListenerResponse response, string filePath)
+        {
+            var fileSize = new FileInfo(filePath).Length;
+            using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, (int)Math.Min(81920, fileSize), FileOptions.SequentialScan))
+            {
+                response.ContentLength64 = fileSize;
+                fs.CopyTo(response.OutputStream);
+            }
         }
 
         /// <summary>
