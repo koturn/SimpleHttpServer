@@ -264,9 +264,20 @@ namespace SimpleHttpServer
                         case "-d":
                             allowToGenerateChromeDevToolJson = true;
                             break;
+                        case "-g":
+                            hostPart = "+";
+                            break;
                         case "-h":
                             ShowUsage();
                             Environment.Exit(0);
+                            break;
+                        case "-H":
+                            if (i + 1 >= args.Length)
+                            {
+                                throw new InvalidOperationException(string.Format("Argument required for option \"{0}\"", arg));
+                            }
+                            i++;
+                            hostPart = args[i];
                             break;
                         case "-l":
                             if (i + 1 >= args.Length)
@@ -373,8 +384,12 @@ namespace SimpleHttpServer
             writer.WriteLine("[OPTIONS]");
             writer.WriteLine("  -d");
             writer.WriteLine("    Allow to generate \"/.well-known/appspecific/com.chrome.devtools.json\".");
+            writer.WriteLine("  -g");
+            writer.WriteLine("    Use \"+\" as host part.");
             writer.WriteLine("  -h");
             writer.WriteLine("    Show this message and exit program.");
+            writer.WriteLine("  -H HOST");
+            writer.WriteLine("    Use HOST as host part.");
             writer.WriteLine("  -l DIR");
             writer.WriteLine("    Use specified local directory as the root. (Default: .)");
             writer.WriteLine("  -r DIR");
