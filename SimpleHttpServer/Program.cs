@@ -3,7 +3,7 @@
 #endif  // NET7_0_OR_GREATER
 
 #define USE_WIN32ICON_AS_FAVICON
-#define USE_EMBEDDED_ICON_AS_FAVICON
+// #define USE_EMBEDDED_ICON_AS_FAVICON
 // #define USE_SYSTEM_WEB_MIME_MAPPING
 #define USE_ASMGUID_FOR_CHROME_DEVTOOL_JSON
 
@@ -102,6 +102,12 @@ namespace SimpleHttpServer
         /// </summary>
         private const ConsoleColor UserAgentColor = ConsoleColor.DarkYellow;
 
+#if !NETFRAMEWORK && !WINDOWS
+        /// <summary>
+        /// A flag whether current running platform is Windows or not.
+        /// </summary>
+        private static readonly bool _isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+#endif  // !NETFRAMEWORK && !WINDOWS
         /// <summary>
         /// Directory separator.
         /// </summary>
@@ -920,16 +926,27 @@ namespace SimpleHttpServer
         /// <returns>Resource data.</returns>
         private static byte[] GetSelfIconData()
         {
+#if USE_WIN32ICON_AS_FAVICON
+#if NETFRAMEWORK || WINDOWS
+            const bool isWindows = true;
+#else
+            var isWindows = _isWindows;
+#endif  // NETFRAMEWORK || WINDOWS
+#endif  // USE_WIN32ICON_AS_FAVICON
+
             if (_iconData != null)
             {
                 return _iconData;
             }
 
 #if USE_WIN32ICON_AS_FAVICON
-            var iconDataList = Win32IconHelper.GetAllIconData(GetCurrentApplicationPath());
-            if (iconDataList.Count > 0)
+            if (isWindows)
             {
-                return _iconData = iconDataList[0];
+                var iconDataList = Win32IconHelper.GetAllIconData(GetCurrentApplicationPath());
+                if (iconDataList.Count > 0)
+                {
+                    return _iconData = iconDataList[0];
+                }
             }
 #endif  // USE_WIN32ICON_AS_FAVICON
 
