@@ -1,6 +1,8 @@
 SimpleHttpServer
 ================
 
+[![.NET](https://github.com/koturn/SimpleHttpServer/actions/workflows/dotnet.yml/badge.svg?branch=main)](https://github.com/koturn/SimpleHttpServer/actions/workflows/dotnet.yml)
+
 A simple HTTP server that can be built using the C# compiler preinstalled on Windows.
 
 ## Build

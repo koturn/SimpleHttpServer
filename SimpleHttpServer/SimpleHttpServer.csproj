@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net481;net10.0</TargetFrameworks>
+    <ApplicationIcon>favicon.ico</ApplicationIcon>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion Condition="'$(TargetFramework)'!='net481'">14</LangVersion>
+    <LangVersion Condition="'$(TargetFramework)'=='net481'">5</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <WarningLevel>8</WarningLevel>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <PublishTrimmed Condition="'$(TargetFramework)'!='net481'">True</PublishTrimmed>
+    <PublishAot Condition="'$(TargetFramework)'!='net481'">True</PublishAot>
+    <Title>SimpleHttpServer</Title>
+    <Version>1.0.0</Version>
+    <Authors>koturn</Authors>
+    <Company>koturn</Company>
+    <Description>A simple HTTP server.</Description>
+    <Copyright>Copyright (C) 2025 koturn All Rights Reserverd.</Copyright>
+    <PackageProjectUrl>https://github.com/koturn/SimpleHttpServer</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/koturn/SimpleHttpServer</RepositoryUrl>
+    <PackageTags>Windows;HTTP;http.sys</PackageTags>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="AssemblyInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="AssemblyInfo.cs" />
+  </ItemGroup>
+
+</Project>
