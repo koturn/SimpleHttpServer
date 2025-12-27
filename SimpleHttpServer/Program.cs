@@ -431,115 +431,126 @@ namespace SimpleHttpServer
                             {
                                 using (var response = context.Response)
                                 {
-                                    var rawPath = RemoveUrlParameter(request.RawUrl);
-                                    if (appOptions.TreatPrefixRootAsLocalRoot)
-                                    {
-                                        if (rawPath == appOptions.PrefixRoot)
-                                        {
-                                            rawPath = "/.";
-                                        }
-                                        else if (rawPath.StartsWith(appOptions.PrefixRoot + "/"))
-                                        {
-                                            rawPath = rawPath.Substring(appOptions.PrefixRoot.Length);
-                                        }
-                                    }
-                                    if (rawPath.Length == 0)
-                                    {
-                                        rawPath = "/.";
-                                    }
+                                    string paramPart;
+                                    var rawPath = RemoveUrlParameter(request.RawUrl, out paramPart);
 
-                                    var entryPath = (appOptions.LocalRootPath + rawPath).Replace("/", _dirSep);
-
-                                    response.ContentLength64 = 0;
-
-                                    if (!request.HttpMethod.Equals("GET"))
+                                    var collapsedPath = CollapseSeqChar(rawPath, '/');
+                                    if (collapsedPath != rawPath)
                                     {
-                                        response.StatusCode = (int)HttpStatusCode.NotImplemented;
-                                    }
-                                    else if (entryPath.Contains(_parentMid) || entryPath.EndsWith(_parentLast))
-                                    {
-                                        response.StatusCode = (int)HttpStatusCode.BadRequest;
-                                    }
-                                    else if (Directory.Exists(entryPath))
-                                    {
-                                        if (entryPath.EndsWith(_dirSep))
-                                        {
-                                            response.ContentType = "text/html";
-
-                                            var indexPath = entryPath + "index.html";
-                                            if (File.Exists(indexPath))
-                                            {
-                                                TransferFile(response, indexPath);
-                                            }
-                                            else
-                                            {
-                                                var indexPage = CreateIndexPage(entryPath, rawPath, rootFaviconPath, appOptions.IsGenerateHtml5IndexPage);
-                                                var content = Encoding.UTF8.GetBytes(indexPage);
-                                                response.ContentLength64 = content.Length;
-                                                response.OutputStream.Write(content, 0, content.Length);
-                                            }
-                                        }
-                                        else
-                                        {
-                                            response.Headers.Set("Location", request.Url + "/");
-                                            response.StatusCode = (int)HttpStatusCode.MovedPermanently;
-                                        }
-                                    }
-                                    else if (File.Exists(entryPath))
-                                    {
-                                        try
-                                        {
-#if USE_SYSTEM_WEB_MIME_MAPPING
-                                            response.ContentType = MimeMapping.GetMimeMapping(entryPath);
-#else
-                                            response.ContentType = MimeMapper.GetMimeType(entryPath);
-#endif  // USE_SYSTEM_WEB_MIME_MAPPING
-                                            TransferFile(response, entryPath);
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            lock (_consoleLock)
-                                            {
-                                                Console.ForegroundColor = ConsoleColor.Magenta;
-                                                Console.Error.WriteLine(ex);
-                                                Console.ResetColor();
-                                            }
-                                            response.StatusCode = (int)HttpStatusCode.Forbidden;
-                                        }
+                                        response.Headers.Set("Location", paramPart.Length == 0 ? collapsedPath : (collapsedPath + "?" + paramPart));
+                                        response.StatusCode = (int)HttpStatusCode.MovedPermanently;
                                     }
                                     else
                                     {
-#if USE_WIN32ICON_AS_FAVICON || USE_EMBEDDED_ICON_AS_FAVICON
-                                        if (rawPath == "/favicon.ico")
+                                        if (appOptions.TreatPrefixRootAsLocalRoot)
                                         {
-                                            var content = GetSelfIconData();
-                                            if (content.Length == 0)
+                                            if (collapsedPath == appOptions.PrefixRoot)
                                             {
-                                                response.StatusCode = (int)HttpStatusCode.NotFound;
+                                                collapsedPath = "/.";
+                                            }
+                                            else if (collapsedPath.StartsWith(appOptions.PrefixRoot + "/"))
+                                            {
+                                                collapsedPath = collapsedPath.Substring(appOptions.PrefixRoot.Length);
+                                            }
+                                        }
+                                        if (collapsedPath.Length == 0)
+                                        {
+                                            collapsedPath = "/.";
+                                        }
+
+                                        var entryPath = (appOptions.LocalRootPath + collapsedPath).Replace("/", _dirSep);
+
+                                        response.ContentLength64 = 0;
+
+                                        if (!request.HttpMethod.Equals("GET"))
+                                        {
+                                            response.StatusCode = (int)HttpStatusCode.NotImplemented;
+                                        }
+                                        else if (entryPath.Contains(_parentMid) || entryPath.EndsWith(_parentLast))
+                                        {
+                                            response.StatusCode = (int)HttpStatusCode.BadRequest;
+                                        }
+                                        else if (Directory.Exists(entryPath))
+                                        {
+                                            if (entryPath.EndsWith(_dirSep))
+                                            {
+                                                response.ContentType = "text/html";
+
+                                                var indexPath = entryPath + "index.html";
+                                                if (File.Exists(indexPath))
+                                                {
+                                                    TransferFile(response, indexPath);
+                                                }
+                                                else
+                                                {
+                                                    var indexPage = CreateIndexPage(entryPath, collapsedPath, rootFaviconPath, appOptions.IsGenerateHtml5IndexPage);
+                                                    var content = Encoding.UTF8.GetBytes(indexPage);
+                                                    response.ContentLength64 = content.Length;
+                                                    response.OutputStream.Write(content, 0, content.Length);
+                                                }
                                             }
                                             else
                                             {
-                                                response.ContentType = "image/x-icon";
-                                                response.ContentLength64 = content.Length;
-                                                response.OutputStream.Write(content, 0, content.Length);
+                                                var redirectPath = rawPath + "/";
+                                                response.Headers.Set("Location", paramPart.Length == 0 ? redirectPath : (redirectPath + "?" + paramPart));
+                                                response.StatusCode = (int)HttpStatusCode.MovedPermanently;
+                                            }
+                                        }
+                                        else if (File.Exists(entryPath))
+                                        {
+                                            try
+                                            {
+#if USE_SYSTEM_WEB_MIME_MAPPING
+                                                response.ContentType = MimeMapping.GetMimeMapping(entryPath);
+#else
+                                                response.ContentType = MimeMapper.GetMimeType(entryPath);
+#endif  // USE_SYSTEM_WEB_MIME_MAPPING
+                                                TransferFile(response, entryPath);
+                                            }
+                                            catch (Exception ex)
+                                            {
+                                                lock (_consoleLock)
+                                                {
+                                                    Console.ForegroundColor = ConsoleColor.Magenta;
+                                                    Console.Error.WriteLine(ex);
+                                                    Console.ResetColor();
+                                                }
+                                                response.StatusCode = (int)HttpStatusCode.Forbidden;
                                             }
                                         }
                                         else
+                                        {
+#if USE_WIN32ICON_AS_FAVICON || USE_EMBEDDED_ICON_AS_FAVICON
+                                            if (collapsedPath == "/favicon.ico")
+                                            {
+                                                var content = GetSelfIconData();
+                                                if (content.Length == 0)
+                                                {
+                                                    response.StatusCode = (int)HttpStatusCode.NotFound;
+                                                }
+                                                else
+                                                {
+                                                    response.ContentType = "image/x-icon";
+                                                    response.ContentLength64 = content.Length;
+                                                    response.OutputStream.Write(content, 0, content.Length);
+                                                }
+                                            }
+                                            else
 #endif  // USE_WIN32ICON_AS_FAVICON || USE_EMBEDDED_ICON_AS_FAVICON
-                                        if (rawPath == "/.well-known/appspecific/com.chrome.devtools.json" && appOptions.AllowToGenerateChromeDevToolJson)
-                                        {
-                                            var chromeDevToolJson = CreateChromeDevToolJson(appOptions.LocalRootPath);
-                                            var content = Encoding.UTF8.GetBytes(chromeDevToolJson);
-                                            response.ContentType = "application/json";
-                                            response.ContentLength64 = content.Length;
-                                            response.OutputStream.Write(content, 0, content.Length);
-                                        }
-                                        else
-                                        {
-                                            response.StatusCode = (int)HttpStatusCode.NotFound;
+                                            if (collapsedPath == "/.well-known/appspecific/com.chrome.devtools.json" && appOptions.AllowToGenerateChromeDevToolJson)
+                                            {
+                                                var chromeDevToolJson = CreateChromeDevToolJson(appOptions.LocalRootPath);
+                                                var content = Encoding.UTF8.GetBytes(chromeDevToolJson);
+                                                response.ContentType = "application/json";
+                                                response.ContentLength64 = content.Length;
+                                                response.OutputStream.Write(content, 0, content.Length);
+                                            }
+                                            else
+                                            {
+                                                response.StatusCode = (int)HttpStatusCode.NotFound;
+                                            }
                                         }
                                     }
-
                                     lock (_consoleLock)
                                     {
                                         if (appOptions.LogFormatType == LogFormatType.Combined)
@@ -748,11 +759,94 @@ namespace SimpleHttpServer
         /// Remove parameter part from specified URL.
         /// </summary>
         /// <param name="url">URL string.</param>
+        /// <param name="paramPart">Parameter part.</param>
         /// <returns>URL string which is removed parameter part.</returns>
-        private static string RemoveUrlParameter(string url)
+        private static string RemoveUrlParameter(string url, out string paramPart)
         {
             var index = url.IndexOf('?');
-            return index == -1 ? url : url.Substring(0, index);
+            if (index == -1)
+            {
+                paramPart = string.Empty;
+                return url;
+            }
+            else
+            {
+                paramPart = index == url.Length - 1 ? string.Empty : url.Substring(index + 1);
+                return url.Substring(0, index);
+            }
+        }
+
+        /// <summary>
+        /// Collapce specified character.
+        /// </summary>
+        /// <param name="source">Source string.</param>
+        /// <param name="target">Target character.</param>
+        /// <returns>Collapsed string.</returns>
+        private static string CollapseSeqChar(string source, char target)
+        {
+            if (string.IsNullOrEmpty(source))
+            {
+                return source;
+            }
+#if NET5_0_OR_GREATER
+            var src = source.AsSpan();
+
+            var needsChange = false;
+            for (int i = 1; i < src.Length; i++)
+            {
+                if (src[i] == target && src[i - 1] == target)
+                {
+                    needsChange = true;
+                    break;
+                }
+            }
+
+            if (!needsChange)
+            {
+                return source;
+            }
+
+            var count = 1;
+            for (int i = 1; i < src.Length; i++)
+            {
+                if (!(src[i] == target && src[i - 1] == target))
+                {
+                    count++;
+                }
+            }
+
+            return string.Create(count, (source, target), (dst, state) =>
+            {
+                var (s0, t) = state;
+                var s = s0.AsSpan();
+                int di = 0;
+
+                dst[di++] = s[0];
+                for (int i = 1; i < s.Length; i++)
+                {
+                    if (!(s[i] == t && s[i - 1] == t))
+                    {
+                        dst[di++] = s[i];
+                    }
+                }
+            });
+#else
+            var sb = new StringBuilder(source.Length);
+            var prev = source[0];
+            sb.Append(prev);
+
+            for (int i = 1; i < source.Length; i++)
+            {
+                var c = source[i];
+                if (c != target || prev != target)
+                {
+                    sb.Append(c);
+                }
+                prev = c;
+            }
+
+            return sb.ToString();
+#endif  // NET5_0_OR_GREATER
         }
 
         /// <summary>
