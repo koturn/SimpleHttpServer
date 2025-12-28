@@ -438,7 +438,7 @@ namespace SimpleHttpServer
                                     if (collapsedPath != rawPath)
                                     {
                                         response.Headers.Set("Location", paramPart.Length == 0 ? collapsedPath : (collapsedPath + "?" + paramPart));
-                                        response.StatusCode = (int)HttpStatusCode.MovedPermanently;
+                                        response.StatusCode = (int)HttpStatusCode.TemporaryRedirect;
                                     }
                                     else
                                     {
@@ -493,7 +493,7 @@ namespace SimpleHttpServer
                                             {
                                                 var redirectPath = rawPath + "/";
                                                 response.Headers.Set("Location", paramPart.Length == 0 ? redirectPath : (redirectPath + "?" + paramPart));
-                                                response.StatusCode = (int)HttpStatusCode.MovedPermanently;
+                                                response.StatusCode = (int)HttpStatusCode.TemporaryRedirect;
                                             }
                                         }
                                         else if (File.Exists(entryPath))
