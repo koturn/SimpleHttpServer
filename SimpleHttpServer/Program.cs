@@ -15,6 +15,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 #if USE_ASMGUID_FOR_CHROME_DEVTOOL_JSON
@@ -47,6 +48,10 @@ namespace SimpleHttpServer
         /// Default local root path.
         /// </summary>
         private const string DefaultLocalRootPath = ".";
+        /// <summary>
+        /// Default host name.
+        /// </summary>
+        private const string DefaultHost = "127.0.0.1";
         /// <summary>
         /// Default port number.
         /// </summary>
@@ -182,7 +187,10 @@ namespace SimpleHttpServer
                 if (appOptions.ShouldLaunchWebBrowser)
                 {
                     Thread.Sleep(100);
-                    OpenWithDefaultWebBrowser(string.Format("http://127.0.0.1:{0}{1}", appOptions.Port, appOptions.PrefixRoot));
+                    if (listener.Prefixes.Count > 0)
+                    {
+                        OpenWithDefaultWebBrowser(listener.Prefixes.First().Replace("+", DefaultHost).Replace("*", DefaultHost));
+                    }
                 }
 
                 string line;
@@ -237,7 +245,7 @@ namespace SimpleHttpServer
         /// <returns><see cref="AppOptions"/> instance.</returns>
         private static AppOptions ParseArguments(string[] args)
         {
-            var hostPart = "127.0.0.1";
+            var hostPart = DefaultHost;
             var port = DefaultPort;
             var prefixRoot = "";
             var localRootPath = DefaultLocalRootPath;
