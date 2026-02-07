@@ -1080,7 +1080,7 @@ namespace SimpleHttpServer
                 }
 
                 var data = new byte[stream.Length];
-                var unused = stream.Read(data, 0, data.Length);
+                var _ = stream.Read(data, 0, data.Length);
                 return data;
             }
         }
