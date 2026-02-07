@@ -245,7 +245,6 @@ namespace SimpleHttpServer
             var shouldLaunchWebBrowser = false;
             var isGenerateHtml5IndexPage = true;
             var logFormatType = LogFormatType.Combined;
-            var allowToGenerateChromeDevToolJson = false;
 
             var fallbackToFreePort = true;
             var treatNonOptionArg = false;
@@ -261,9 +260,6 @@ namespace SimpleHttpServer
                 {
                     switch (arg)
                     {
-                        case "-d":
-                            allowToGenerateChromeDevToolJson = true;
-                            break;
                         case "-g":
                             hostPart = "+";
                             break;
@@ -347,8 +343,7 @@ namespace SimpleHttpServer
                 treatPrefixRootAsLocalRoot,
                 shouldLaunchWebBrowser,
                 isGenerateHtml5IndexPage,
-                logFormatType,
-                allowToGenerateChromeDevToolJson);
+                logFormatType);
         }
 
         /// <summary>
@@ -382,8 +377,6 @@ namespace SimpleHttpServer
             writer.WriteLine("[USAGE]");
             writer.WriteLine("  {0} {{OPTIONS...}} {{PORT}}", progName);
             writer.WriteLine("[OPTIONS]");
-            writer.WriteLine("  -d");
-            writer.WriteLine("    Allow to generate \"/.well-known/appspecific/com.chrome.devtools.json\".");
             writer.WriteLine("  -g");
             writer.WriteLine("    Use \"+\" as host part.");
             writer.WriteLine("  -h");
@@ -537,7 +530,7 @@ namespace SimpleHttpServer
                                             }
                                             else
 #endif  // USE_WIN32ICON_AS_FAVICON || USE_EMBEDDED_ICON_AS_FAVICON
-                                            if (collapsedPath == "/.well-known/appspecific/com.chrome.devtools.json" && appOptions.AllowToGenerateChromeDevToolJson)
+                                            if (collapsedPath == "/.well-known/appspecific/com.chrome.devtools.json" && request.IsLocal)
                                             {
                                                 var chromeDevToolJson = CreateChromeDevToolJson(appOptions.LocalRootPath);
                                                 var content = Encoding.UTF8.GetBytes(chromeDevToolJson);
@@ -1131,10 +1124,6 @@ namespace SimpleHttpServer
         /// Log format type.
         /// </summary>
         public LogFormatType LogFormatType { get; private set; }
-        /// <summary>
-        /// Allow to generate /.well-known/appspecific/com.chrome.devtools.json.
-        /// </summary>
-        public bool AllowToGenerateChromeDevToolJson { get; private set; }
 
         /// <summary>
         /// Create <see cref="AppOptions"/> instance.
@@ -1147,7 +1136,6 @@ namespace SimpleHttpServer
         /// <param name="shouldLaunchWebBrowser">True to launch default web browser after starting listening.</param>
         /// <param name="isGenerateHtml5IndexPage">True to create HTML5 index page, otherwise false (create HTML4.01 index page).</param>
         /// <param name="logFormatType">Log format type.</param>
-        /// <param name="allowToGenerateChromeDevToolJson">Allow to generate /.well-known/appspecific/com.chrome.devtools.json.</param>
         public AppOptions(
             string hostPart,
             int port,
@@ -1156,8 +1144,7 @@ namespace SimpleHttpServer
             bool treatPrefixRootAsLocalRoot,
             bool shouldLaunchWebBrowser,
             bool isGenerateHtml5IndexPage,
-            LogFormatType logFormatType,
-            bool allowToGenerateChromeDevToolJson)
+            LogFormatType logFormatType)
         {
             HostPart = hostPart;
             Port = port;
@@ -1167,7 +1154,6 @@ namespace SimpleHttpServer
             ShouldLaunchWebBrowser = shouldLaunchWebBrowser;
             LogFormatType = logFormatType;
             IsGenerateHtml5IndexPage = isGenerateHtml5IndexPage;
-            AllowToGenerateChromeDevToolJson = allowToGenerateChromeDevToolJson;
         }
     }
 

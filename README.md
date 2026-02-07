@@ -43,7 +43,6 @@ Variout options are available.
 
 | Option | Description |
 |-|-|
-| `-d` | Allow to generate [`/.well-known/appspecific/com.chrome.devtools.json`](https://chromium.googlesource.com/devtools/devtools-frontend/+/main/docs/ecosystem/automatic_workspace_folders.md "Chromium DevTools Ecosystem Guide - Automatic Workspace Folders"). |
 | `-g` | Use "+" as host part. |
 | `-h` | Show help message and exit program. |
 | `-H HOST` | Use specified host as host part. |
