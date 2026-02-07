@@ -437,21 +437,21 @@ namespace SimpleHttpServer
                                     {
                                         if (appOptions.TreatPrefixRootAsLocalRoot)
                                         {
-                                            if (collapsedPath == appOptions.PrefixRoot)
+                                            if (rawPath == appOptions.PrefixRoot)
                                             {
-                                                collapsedPath = "/.";
+                                                rawPath = "/.";
                                             }
-                                            else if (collapsedPath.StartsWith(appOptions.PrefixRoot + "/"))
+                                            else if (rawPath.StartsWith(appOptions.PrefixRoot + "/"))
                                             {
-                                                collapsedPath = collapsedPath.Substring(appOptions.PrefixRoot.Length);
+                                                rawPath = rawPath.Substring(appOptions.PrefixRoot.Length);
                                             }
                                         }
-                                        if (collapsedPath.Length == 0)
+                                        if (rawPath.Length == 0)
                                         {
-                                            collapsedPath = "/.";
+                                            rawPath = "/.";
                                         }
 
-                                        var entryPath = (appOptions.LocalRootPath + collapsedPath).Replace("/", _dirSep);
+                                        var entryPath = (appOptions.LocalRootPath + rawPath).Replace("/", _dirSep);
 
                                         response.ContentLength64 = 0;
 
@@ -476,7 +476,7 @@ namespace SimpleHttpServer
                                                 }
                                                 else
                                                 {
-                                                    var indexPage = CreateIndexPage(entryPath, collapsedPath, rootFaviconPath, appOptions.IsGenerateHtml5IndexPage);
+                                                    var indexPage = CreateIndexPage(entryPath, rawPath, rootFaviconPath, appOptions.IsGenerateHtml5IndexPage);
                                                     var content = Encoding.UTF8.GetBytes(indexPage);
                                                     response.ContentLength64 = content.Length;
                                                     response.OutputStream.Write(content, 0, content.Length);
@@ -514,7 +514,7 @@ namespace SimpleHttpServer
                                         else
                                         {
 #if USE_WIN32ICON_AS_FAVICON || USE_EMBEDDED_ICON_AS_FAVICON
-                                            if (collapsedPath == "/favicon.ico")
+                                            if (rawPath == "/favicon.ico")
                                             {
                                                 var content = GetSelfIconData();
                                                 if (content.Length == 0)
@@ -530,7 +530,7 @@ namespace SimpleHttpServer
                                             }
                                             else
 #endif  // USE_WIN32ICON_AS_FAVICON || USE_EMBEDDED_ICON_AS_FAVICON
-                                            if (collapsedPath == "/.well-known/appspecific/com.chrome.devtools.json" && request.IsLocal)
+                                            if (rawPath == "/.well-known/appspecific/com.chrome.devtools.json" && request.IsLocal)
                                             {
                                                 var chromeDevToolJson = CreateChromeDevToolJson(appOptions.LocalRootPath);
                                                 var content = Encoding.UTF8.GetBytes(chromeDevToolJson);
