@@ -455,7 +455,7 @@ namespace SimpleHttpServer
 
                                         response.ContentLength64 = 0;
 
-                                        if (!request.HttpMethod.Equals("GET"))
+                                        if (request.HttpMethod != "GET")
                                         {
                                             response.StatusCode = (int)HttpStatusCode.NotImplemented;
                                         }
