@@ -179,6 +179,11 @@ namespace SimpleHttpServer
                 Console.ForegroundColor = TimestampColor;
                 Console.Error.Write("[{0}]", GetCurrentTimestamp());
                 Console.ForegroundColor = ConsoleColor.White;
+                Console.Error.WriteLine(" Path binding: {0} -> {1}", appOptions.PrefixRoot.Length == 0 ? "/" : appOptions.PrefixRoot, appOptions.LocalRootPath);
+
+                Console.ForegroundColor = TimestampColor;
+                Console.Error.Write("[{0}]", GetCurrentTimestamp());
+                Console.ForegroundColor = ConsoleColor.White;
                 Console.Error.WriteLine(" Start listening ...");
 
                 listener.Start();
@@ -186,7 +191,7 @@ namespace SimpleHttpServer
                 Console.ForegroundColor = TimestampColor;
                 Console.Error.Write("[{0}]", GetCurrentTimestamp());
                 Console.ForegroundColor = ConsoleColor.White;
-                Console.Error.WriteLine(" Enter \"exit\", \"quit\" or EOF (Ctrl-Z) to terminate this program");
+                Console.Error.WriteLine(" Enter \"exit\", \"quit\" or EOF (Ctrl-Z) to terminate this program.");
                 Console.ResetColor();
 
                 var thread = StartListenThread(listener, appOptions);
@@ -358,7 +363,16 @@ namespace SimpleHttpServer
 
             if (fallbackToFreePort)
             {
-                port = EnsureAvailablePort(port);
+                var newPort = EnsureAvailablePort(port);
+                if (newPort != port)
+                {
+                    Console.ForegroundColor = TimestampColor;
+                    Console.Error.Write("[{0}]", GetCurrentTimestamp());
+                    Console.ForegroundColor = ConsoleColor.Magenta;
+                    Console.Error.WriteLine(" Failed to bind port {0}, fallback to port {1}.", port, newPort);
+                    Console.ResetColor();
+                }
+                port = newPort;
             }
 
             return new AppOptions(
@@ -417,6 +431,7 @@ namespace SimpleHttpServer
             writer.WriteLine("    Treat the prefix root directory as the local root directory.");
             writer.WriteLine("  -t");
             writer.WriteLine("    Use \"http://+:80/Temporary_Listen_Addresses/\" as prefix.");
+            writer.WriteLine("    Same as specifying \"-g\", \"-H Temporary_Listen_Addresses\" and port 80.");
             writer.WriteLine("  -w");
             writer.WriteLine("    Launch default web browser after starting listening.");
             writer.WriteLine("  --legacy-index-page");
