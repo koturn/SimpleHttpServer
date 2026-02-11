@@ -49,9 +49,13 @@ namespace SimpleHttpServer
         /// </summary>
         private const string DefaultLocalRootPath = ".";
         /// <summary>
-        /// Default host name.
+        /// Default host name for IPv4.
         /// </summary>
-        private const string DefaultHost = "127.0.0.1";
+        private const string DefaultHostIpv4 = "127.0.0.1";
+        /// <summary>
+        /// Default host name for IPv6.
+        /// </summary>
+        private const string DefaultHostIpv6 = "[::1]";
         /// <summary>
         /// Default port number.
         /// </summary>
@@ -192,7 +196,7 @@ namespace SimpleHttpServer
                     Thread.Sleep(100);
                     if (listener.Prefixes.Count > 0)
                     {
-                        OpenWithDefaultWebBrowser(listener.Prefixes.First().Replace("+", DefaultHost).Replace("*", DefaultHost));
+                        OpenWithDefaultWebBrowser(listener.Prefixes.First().Replace("+", DefaultHostIpv4).Replace("*", DefaultHostIpv4));
                     }
                 }
 
@@ -343,7 +347,8 @@ namespace SimpleHttpServer
 
             if (hostPartList.Count == 0)
             {
-                hostPartList.Add(DefaultHost);
+                hostPartList.Add(DefaultHostIpv4);
+                hostPartList.Add(DefaultHostIpv6);
             }
 
             if (prefixRoot.Length > 0 && prefixRoot[0] != '/')
