@@ -492,7 +492,7 @@ namespace SimpleHttpServer
                                             rawPath = "/.";
                                         }
 
-                                        var entryPath = (appOptions.LocalRootPath + rawPath).Replace("/", _dirSep);
+                                        var entryPath = (appOptions.LocalRootPath + WebUtility.UrlDecode(rawPath)).Replace("/", _dirSep);
 
                                         response.ContentLength64 = 0;
 
