@@ -157,7 +157,10 @@ namespace SimpleHttpServer
                 var appOptions = ParseArguments(args);
 
                 listener = new HttpListener();
-                listener.Prefixes.Add(string.Format("http://{0}:{1}{2}/", appOptions.HostPart, appOptions.Port, appOptions.PrefixRoot));
+                foreach (var hostPart in appOptions.HostPartList)
+                {
+                    listener.Prefixes.Add(string.Format("http://{0}:{1}{2}/", hostPart, appOptions.Port, appOptions.PrefixRoot));
+                }
 
                 int index = 0;
                 foreach (var prefix in listener.Prefixes)
@@ -245,7 +248,7 @@ namespace SimpleHttpServer
         /// <returns><see cref="AppOptions"/> instance.</returns>
         private static AppOptions ParseArguments(string[] args)
         {
-            var hostPart = DefaultHost;
+            var hostPartList = new List<string>();
             var port = DefaultPort;
             var prefixRoot = "";
             var localRootPath = DefaultLocalRootPath;
@@ -269,7 +272,8 @@ namespace SimpleHttpServer
                     switch (arg)
                     {
                         case "-g":
-                            hostPart = "+";
+                            hostPartList.Clear();
+                            hostPartList.Add("+");
                             break;
                         case "-h":
                             ShowUsage();
@@ -281,7 +285,10 @@ namespace SimpleHttpServer
                                 throw new InvalidOperationException(string.Format("Argument required for option \"{0}\"", arg));
                             }
                             i++;
-                            hostPart = args[i];
+                            if (hostPartList.Count == 0 || hostPartList[0] != "+")
+                            {
+                                hostPartList.Add(args[i]);
+                            }
                             break;
                         case "-l":
                             if (i + 1 >= args.Length)
@@ -307,7 +314,8 @@ namespace SimpleHttpServer
                             treatPrefixRootAsLocalRoot = true;
                             break;
                         case "-t":
-                            hostPart = "+";
+                            hostPartList.Clear();
+                            hostPartList.Add("+");
                             port = 80;
                             prefixRoot = "Temporary_Listen_Addresses";
                             fallbackToFreePort = false;
@@ -333,6 +341,11 @@ namespace SimpleHttpServer
                 }
             }
 
+            if (hostPartList.Count == 0)
+            {
+                hostPartList.Add(DefaultHost);
+            }
+
             if (prefixRoot.Length > 0 && prefixRoot[0] != '/')
             {
                 prefixRoot = "/" + prefixRoot;
@@ -344,7 +357,7 @@ namespace SimpleHttpServer
             }
 
             return new AppOptions(
-                hostPart,
+                hostPartList,
                 port,
                 localRootPath,
                 prefixRoot,
@@ -1103,7 +1116,7 @@ namespace SimpleHttpServer
         /// <summary>
         /// Host part string of the prefix.
         /// </summary>
-        public string HostPart { get; private set; }
+        public List<string> HostPartList { get; private set; }
         /// <summary>
         /// Port number for listening.
         /// </summary>
@@ -1136,7 +1149,7 @@ namespace SimpleHttpServer
         /// <summary>
         /// Create <see cref="AppOptions"/> instance.
         /// </summary>
-        /// <param name="hostPart">Host part string of the prefix.</param>
+        /// <param name="hostPartList"><see cref="List{T}"/> of the host part string of the prefix.</param>
         /// <param name="port">Port number for listening.</param>
         /// <param name="localRootPath">Local root path.</param>
         /// <param name="prefixRoot">Root path of the prefix.</param>
@@ -1145,7 +1158,7 @@ namespace SimpleHttpServer
         /// <param name="isGenerateHtml5IndexPage">True to create HTML5 index page, otherwise false (create HTML4.01 index page).</param>
         /// <param name="logFormatType">Log format type.</param>
         public AppOptions(
-            string hostPart,
+            List<string> hostPartList,
             int port,
             string localRootPath,
             string prefixRoot,
@@ -1154,7 +1167,7 @@ namespace SimpleHttpServer
             bool isGenerateHtml5IndexPage,
             LogFormatType logFormatType)
         {
-            HostPart = hostPart;
+            HostPartList = hostPartList;
             Port = port;
             LocalRootPath = localRootPath;
             PrefixRoot = prefixRoot;
