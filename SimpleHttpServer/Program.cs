@@ -8,6 +8,9 @@
 #define USE_ASMGUID_FOR_CHROME_DEVTOOL_JSON
 
 using System;
+#if NET8_0_OR_GREATER
+using System.Collections.Frozen;
+#endif  // NET8_0_OR_GREATER
 using System.Collections.Generic;
 #if USE_WIN32ICON_AS_FAVICON
 using System.ComponentModel;
@@ -1270,7 +1273,11 @@ namespace SimpleHttpServer
         /// <summary>
         /// Extension - MIME type dictionary.
         /// </summary>
+#if NET8_0_OR_GREATER
+        private static readonly FrozenDictionary<string, string> _mimeTypeDict = new Dictionary<string, string>()
+#else
         private static readonly Dictionary<string, string> _mimeTypeDict = new Dictionary<string, string>()
+#endif  // NET8_0_OR_GREATER
         {
             {".323", "text/h323"},
             {".aaf", "application/octet-stream"},
@@ -1616,7 +1623,11 @@ namespace SimpleHttpServer
             {".xwd", "image/x-xwindowdump"},
             {".z", "application/x-compress"},
             {".zip", "application/x-zip-compressed"}
-        };
+        }
+#if NET8_0_OR_GREATER
+        .ToFrozenDictionary()
+#endif  // NET8_0_OR_GREATER
+        ;
 
         /// <summary>
         /// Get MIME type correspond to specified file name.
