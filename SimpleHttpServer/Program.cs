@@ -455,7 +455,6 @@ namespace SimpleHttpServer
             {
                 try
                 {
-                    var rootFaviconPath = appOptions.PrefixRoot + "/favicon.ico";
                     while (listener.IsListening)
                     {
                         var context = listener.GetContext();  // Wait for request.
@@ -466,126 +465,16 @@ namespace SimpleHttpServer
                             {
                                 using (var response = context.Response)
                                 {
-                                    string paramPart;
-                                    var rawPath = RemoveUrlParameter(request.RawUrl, out paramPart);
-
-                                    var collapsedPath = CollapseSeqChar(rawPath, '/');
-                                    if (collapsedPath != rawPath)
+                                    switch (request.HttpMethod)
                                     {
-                                        response.Headers.Set("Location", paramPart.Length == 0 ? collapsedPath : (collapsedPath + "?" + paramPart));
-                                        response.StatusCode = (int)HttpStatusCode.TemporaryRedirect;
-                                    }
-                                    else
-                                    {
-                                        if (appOptions.TreatPrefixRootAsLocalRoot)
-                                        {
-                                            if (rawPath == appOptions.PrefixRoot)
-                                            {
-                                                rawPath = "/.";
-                                            }
-                                            else if (rawPath.StartsWith(appOptions.PrefixRoot + "/"))
-                                            {
-                                                rawPath = rawPath.Substring(appOptions.PrefixRoot.Length);
-                                            }
-                                        }
-                                        if (rawPath.Length == 0)
-                                        {
-                                            rawPath = "/.";
-                                        }
-
-                                        var entryPath = (appOptions.LocalRootPath + WebUtility.UrlDecode(rawPath)).Replace("/", _dirSep);
-
-                                        response.ContentLength64 = 0;
-
-                                        if (request.HttpMethod != "GET")
-                                        {
+                                        case "GET":
+                                            HandleAsGetRequest(request, response, appOptions);
+                                            break;
+                                        default:
                                             response.StatusCode = (int)HttpStatusCode.NotImplemented;
-                                        }
-                                        else if (entryPath.Contains(_parentMid) || entryPath.EndsWith(_parentLast))
-                                        {
-                                            response.StatusCode = (int)HttpStatusCode.BadRequest;
-                                        }
-                                        else if (Directory.Exists(entryPath))
-                                        {
-                                            if (entryPath.EndsWith(_dirSep))
-                                            {
-                                                response.ContentType = "text/html";
-
-                                                var indexPath = entryPath + "index.html";
-                                                if (File.Exists(indexPath))
-                                                {
-                                                    TransferFile(response, indexPath);
-                                                }
-                                                else
-                                                {
-                                                    var indexPage = CreateIndexPage(entryPath, rawPath, rootFaviconPath, appOptions.IsGenerateHtml5IndexPage);
-                                                    var content = Encoding.UTF8.GetBytes(indexPage);
-                                                    response.ContentLength64 = content.Length;
-                                                    response.OutputStream.Write(content, 0, content.Length);
-                                                }
-                                            }
-                                            else
-                                            {
-                                                var redirectPath = rawPath + "/";
-                                                response.Headers.Set("Location", paramPart.Length == 0 ? redirectPath : (redirectPath + "?" + paramPart));
-                                                response.StatusCode = (int)HttpStatusCode.TemporaryRedirect;
-                                            }
-                                        }
-                                        else if (File.Exists(entryPath))
-                                        {
-                                            try
-                                            {
-#if USE_SYSTEM_WEB_MIME_MAPPING
-                                                response.ContentType = MimeMapping.GetMimeMapping(entryPath);
-#else
-                                                response.ContentType = MimeMapper.GetMimeType(entryPath);
-#endif  // USE_SYSTEM_WEB_MIME_MAPPING
-                                                TransferFile(response, entryPath);
-                                            }
-                                            catch (Exception ex)
-                                            {
-                                                lock (_consoleLock)
-                                                {
-                                                    Console.ForegroundColor = ConsoleColor.Magenta;
-                                                    Console.Error.WriteLine(ex);
-                                                    Console.ResetColor();
-                                                }
-                                                response.StatusCode = (int)HttpStatusCode.Forbidden;
-                                            }
-                                        }
-                                        else
-                                        {
-#if USE_WIN32ICON_AS_FAVICON || USE_EMBEDDED_ICON_AS_FAVICON
-                                            if (rawPath == "/favicon.ico")
-                                            {
-                                                var content = GetSelfIconData();
-                                                if (content.Length == 0)
-                                                {
-                                                    response.StatusCode = (int)HttpStatusCode.NotFound;
-                                                }
-                                                else
-                                                {
-                                                    response.ContentType = "image/x-icon";
-                                                    response.ContentLength64 = content.Length;
-                                                    response.OutputStream.Write(content, 0, content.Length);
-                                                }
-                                            }
-                                            else
-#endif  // USE_WIN32ICON_AS_FAVICON || USE_EMBEDDED_ICON_AS_FAVICON
-                                            if (rawPath == "/.well-known/appspecific/com.chrome.devtools.json" && request.IsLocal)
-                                            {
-                                                var chromeDevToolJson = CreateChromeDevToolJson(appOptions.LocalRootPath);
-                                                var content = Encoding.UTF8.GetBytes(chromeDevToolJson);
-                                                response.ContentType = "application/json";
-                                                response.ContentLength64 = content.Length;
-                                                response.OutputStream.Write(content, 0, content.Length);
-                                            }
-                                            else
-                                            {
-                                                response.StatusCode = (int)HttpStatusCode.NotFound;
-                                            }
-                                        }
+                                            break;
                                     }
+
                                     lock (_consoleLock)
                                     {
                                         if (appOptions.LogFormatType == LogFormatType.Combined)
@@ -737,6 +626,127 @@ namespace SimpleHttpServer
         }
 
         /// <summary>
+        /// Handle <see cref="HttpListenerRequest"/> as a "GET" request.
+        /// </summary>
+        /// <param name="request">A <see cref="HttpListenerRequest"/>.</param>
+        /// <param name="response">A <see cref="HttpListenerResponse"/>.</param>
+        /// <param name="appOptions">Application options.</param>
+        private static void HandleAsGetRequest(HttpListenerRequest request, HttpListenerResponse response, AppOptions appOptions)
+        {
+            string paramPart;
+            var rawPath = RemoveUrlParameter(request.RawUrl, out paramPart);
+
+            var collapsedPath = CollapseSeqChar(rawPath, '/');
+            if (collapsedPath != rawPath)
+            {
+                response.Headers.Set("Location", paramPart.Length == 0 ? collapsedPath : (collapsedPath + "?" + paramPart));
+                response.StatusCode = (int)HttpStatusCode.TemporaryRedirect;
+                return;
+            }
+
+            if (appOptions.TreatPrefixRootAsLocalRoot)
+            {
+                if (rawPath == appOptions.PrefixRoot)
+                {
+                    rawPath = "/.";
+                }
+                else if (rawPath.StartsWith(appOptions.PrefixRoot + "/"))
+                {
+                    rawPath = rawPath.Substring(appOptions.PrefixRoot.Length);
+                }
+            }
+            else if (rawPath.Length == 0)
+            {
+                rawPath = "/.";
+            }
+
+            var entryPath = (appOptions.LocalRootPath + WebUtility.UrlDecode(rawPath)).Replace("/", _dirSep);
+            if (entryPath.Contains(_parentMid) || entryPath.EndsWith(_parentLast))
+            {
+                response.StatusCode = (int)HttpStatusCode.BadRequest;
+                return;
+            }
+
+            if (Directory.Exists(entryPath))
+            {
+                if (entryPath.EndsWith(_dirSep))
+                {
+                    response.ContentType = "text/html";
+
+                    var indexPath = entryPath + "index.html";
+                    if (File.Exists(indexPath))
+                    {
+                        TransferFile(response, indexPath);
+                    }
+                    else
+                    {
+                        var rootFaviconPath = appOptions.PrefixRoot + "/favicon.ico";
+                        var indexPage = CreateIndexPage(entryPath, rawPath, rootFaviconPath, appOptions.IsGenerateHtml5IndexPage);
+                        TransferData(response, Encoding.UTF8.GetBytes(indexPage));
+                    }
+                }
+                else
+                {
+                    var redirectPath = rawPath + "/";
+                    response.Headers.Set("Location", paramPart.Length == 0 ? redirectPath : (redirectPath + "?" + paramPart));
+                    response.StatusCode = (int)HttpStatusCode.TemporaryRedirect;
+                }
+            }
+            else if (File.Exists(entryPath))
+            {
+                try
+                {
+#if USE_SYSTEM_WEB_MIME_MAPPING
+                    response.ContentType = MimeMapping.GetMimeMapping(entryPath);
+#else
+                    response.ContentType = MimeMapper.GetMimeType(entryPath);
+#endif  // USE_SYSTEM_WEB_MIME_MAPPING
+                    TransferFile(response, entryPath);
+                }
+                catch (Exception ex)
+                {
+                    lock (_consoleLock)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Magenta;
+                        Console.Error.WriteLine(ex);
+                        Console.ResetColor();
+                    }
+                    response.StatusCode = (int)HttpStatusCode.Forbidden;
+                }
+            }
+            else
+            {
+#if USE_WIN32ICON_AS_FAVICON || USE_EMBEDDED_ICON_AS_FAVICON
+                if (rawPath == "/favicon.ico")
+                {
+                    var iconData = GetSelfIconData();
+                    if (iconData.Length == 0)
+                    {
+                        response.StatusCode = (int)HttpStatusCode.NotFound;
+                    }
+                    else
+                    {
+                        response.ContentType = "image/x-icon";
+                        TransferData(response, iconData);
+                    }
+                }
+                else
+#endif  // USE_WIN32ICON_AS_FAVICON || USE_EMBEDDED_ICON_AS_FAVICON
+                if (rawPath == "/.well-known/appspecific/com.chrome.devtools.json" && request.IsLocal)
+                {
+                    var chromeDevToolJson = CreateChromeDevToolJson(appOptions.LocalRootPath);
+                    var content = Encoding.UTF8.GetBytes(chromeDevToolJson);
+                    response.ContentType = "application/json";
+                    TransferData(response, content);
+                }
+                else
+                {
+                    response.StatusCode = (int)HttpStatusCode.NotFound;
+                }
+            }
+        }
+
+        /// <summary>
         /// Write access log in the combined log format.
         /// </summary>
         /// <param name="writer"><see cref="TextWriter"/> to output.</param>
@@ -882,6 +892,17 @@ namespace SimpleHttpServer
 
             return sb.ToString();
 #endif  // NET5_0_OR_GREATER
+        }
+
+        /// <summary>
+        /// Transfer specified byte data.
+        /// </summary>
+        /// <param name="response"><see cref="HttpListenerRequest"/> to transfer.</param>
+        /// <param name="data">Byte data to transfer.</param>
+        private static void TransferData(HttpListenerResponse response, byte[] data)
+        {
+            response.ContentLength64 = data.Length;
+            response.OutputStream.Write(data, 0, data.Length);
         }
 
         /// <summary>
