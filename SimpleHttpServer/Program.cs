@@ -474,6 +474,9 @@ namespace SimpleHttpServer
                                         case "HEAD":
                                             HandleAsGetOrHeadRequest(request, response, appOptions);
                                             break;
+                                        case "OPTIONS":
+                                            response.Headers.Add("Allow", "GET, HEAD, OPTIONS, TRACE");
+                                            break;
                                         case "TRACE":
                                             HandleAsTraceRequest(request, response);
                                             break;
