@@ -18,6 +18,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Net;
 using System.Net.NetworkInformation;
 #if USE_ASMGUID_FOR_CHROME_DEVTOOL_JSON
@@ -261,6 +262,7 @@ namespace SimpleHttpServer
             var prefixRoot = "";
             var localRootPath = DefaultLocalRootPath;
             var treatPrefixRootAsLocalRoot = false;
+            var useGzip = false;
             var shouldLaunchWebBrowser = false;
             var isGenerateHtml5IndexPage = true;
             var logFormatType = LogFormatType.Combined;
@@ -331,6 +333,9 @@ namespace SimpleHttpServer
                         case "-w":
                             shouldLaunchWebBrowser = true;
                             break;
+                        case "--gzip":
+                            useGzip = true;
+                            break;
                         case "--legacy-index-page":
                             isGenerateHtml5IndexPage = false;
                             break;
@@ -385,6 +390,7 @@ namespace SimpleHttpServer
                 localRootPath,
                 prefixRoot,
                 treatPrefixRootAsLocalRoot,
+                useGzip,
                 shouldLaunchWebBrowser,
                 isGenerateHtml5IndexPage,
                 logFormatType);
@@ -438,6 +444,8 @@ namespace SimpleHttpServer
             writer.WriteLine("    Same as specifying \"-g\", \"-H Temporary_Listen_Addresses\" and port 80.");
             writer.WriteLine("  -w");
             writer.WriteLine("    Launch default web browser after starting listening.");
+            writer.WriteLine("  --gzip");
+            writer.WriteLine("    Compress text data with gzip.");
             writer.WriteLine("  --legacy-index-page");
             writer.WriteLine("    Generate index page written in HTML4.01.");
             writer.WriteLine("  --log-format-common");
@@ -677,6 +685,24 @@ namespace SimpleHttpServer
                 return;
             }
 
+            var doGzip = false;
+            if (appOptions.UseGzip)
+            {
+                foreach (var key in request.Headers.AllKeys)
+                {
+#if NETCOREAPP2_1_OR_GREATER
+                    if (string.Equals(key, "Accept-Encoding", StringComparison.OrdinalIgnoreCase)
+                        && request.Headers[key].Contains("gzip", StringComparison.OrdinalIgnoreCase))
+#else
+                    if (string.Equals(key, "Accept-Encoding", StringComparison.OrdinalIgnoreCase)
+                        && request.Headers[key].ToLower().Contains("gzip"))
+#endif  // NETCOREAPP2_1_OR_GREATER
+                    {
+                        doGzip = true;
+                        break;
+                    }
+                }
+            }
             var shouldTransferBody = request.HttpMethod != "HEAD";
 
             if (Directory.Exists(entryPath))
@@ -688,13 +714,13 @@ namespace SimpleHttpServer
                     var indexPath = entryPath + "index.html";
                     if (File.Exists(indexPath))
                     {
-                        TransferFile(response, indexPath, shouldTransferBody);
+                        TransferFile(response, indexPath, doGzip, shouldTransferBody);
                     }
                     else
                     {
                         var rootFaviconPath = appOptions.PrefixRoot + "/favicon.ico";
                         var indexPage = CreateIndexPage(entryPath, rawPath, rootFaviconPath, appOptions.IsGenerateHtml5IndexPage);
-                        TransferTextData(response, indexPage, Encoding.UTF8, shouldTransferBody);
+                        TransferTextData(response, indexPage, Encoding.UTF8, doGzip, shouldTransferBody);
                     }
                 }
                 else
@@ -713,7 +739,7 @@ namespace SimpleHttpServer
 #else
                     response.ContentType = MimeMapper.GetMimeType(entryPath);
 #endif  // USE_SYSTEM_WEB_MIME_MAPPING
-                    TransferFile(response, entryPath, shouldTransferBody);
+                    TransferFile(response, entryPath, doGzip, shouldTransferBody);
                 }
                 catch (Exception ex)
                 {
@@ -739,7 +765,7 @@ namespace SimpleHttpServer
                     else
                     {
                         response.ContentType = "image/x-icon";
-                        TransferData(response, iconData, shouldTransferBody);
+                        TransferData(response, iconData, doGzip, shouldTransferBody);
                     }
                 }
                 else
@@ -748,7 +774,7 @@ namespace SimpleHttpServer
                 {
                     var chromeDevToolJson = CreateChromeDevToolJson(appOptions.LocalRootPath);
                     response.ContentType = "application/json";
-                    TransferTextData(response, chromeDevToolJson, Encoding.UTF8, shouldTransferBody);
+                    TransferTextData(response, chromeDevToolJson, Encoding.UTF8, doGzip, shouldTransferBody);
                 }
                 else
                 {
@@ -774,7 +800,7 @@ namespace SimpleHttpServer
                 sb.Append(key).Append(": ").AppendLine(headers[key]);
             }
 
-            TransferTextData(response, sb.ToString(), Encoding.UTF8, true);
+            TransferTextData(response, sb.ToString(), Encoding.UTF8, false, true);
         }
 
         /// <summary>
@@ -930,9 +956,32 @@ namespace SimpleHttpServer
         /// </summary>
         /// <param name="response">Destination <see cref="HttpListenerResponse"/>.</param>
         /// <param name="data">Byte data to transfer.</param>
+        /// <param name="doGzip">True to compress data with gzip.</param>
         /// <param name="shouldTransferBody">True to write actual data.</param>
-        private static void TransferData(HttpListenerResponse response, byte[] data, bool shouldTransferBody)
+        private static void TransferData(HttpListenerResponse response, byte[] data, bool doGzip, bool shouldTransferBody)
         {
+            if (doGzip)
+            {
+                using (var ms = new MemoryStream())
+                {
+                    using (var gs = new GZipStream(ms, CompressionMode.Compress, true))
+                    {
+                        gs.Write(data, 0, data.Length);
+                    }
+                    if (ms.Length < data.LongLength)
+                    {
+                        ms.Position = 0;
+                        response.AddHeader("Content-Encoding", "gzip");
+                        response.ContentLength64 = ms.Length;
+                        if (shouldTransferBody)
+                        {
+                            ms.CopyTo(response.OutputStream);
+                        }
+                        return;
+                    }
+                }
+            }
+
             response.ContentLength64 = data.Length;
             if (shouldTransferBody)
             {
@@ -946,12 +995,13 @@ namespace SimpleHttpServer
         /// <param name="response">Destination <see cref="HttpListenerResponse"/>.</param>
         /// <param name="text">Text to transfer.</param>
         /// <param name="encoding">Encoding for <paramref name="text"/>.</param>
+        /// <param name="doGzip">True to compress data with gzip.</param>
         /// <param name="shouldTransferBody">True to write actual data.</param>
-        private static void TransferTextData(HttpListenerResponse response, string text, Encoding encoding, bool shouldTransferBody)
+        private static void TransferTextData(HttpListenerResponse response, string text, Encoding encoding, bool doGzip, bool shouldTransferBody)
         {
-            if (shouldTransferBody)
+            if (doGzip || shouldTransferBody)
             {
-                TransferData(response, encoding.GetBytes(text), true);
+                TransferData(response, encoding.GetBytes(text), doGzip, shouldTransferBody);
             }
             else
             {
@@ -964,10 +1014,34 @@ namespace SimpleHttpServer
         /// </summary>
         /// <param name="response">Destination <see cref="HttpListenerResponse"/>.</param>
         /// <param name="filePath">File path to read from.</param>
+        /// <param name="doGzip">True to compress data with gzip.</param>
         /// <param name="shouldTransferBody">True to write actual data.</param>
-        private static void TransferFile(HttpListenerResponse response, string filePath, bool shouldTransferBody)
+        private static void TransferFile(HttpListenerResponse response, string filePath, bool doGzip, bool shouldTransferBody)
         {
             var fileSize = new FileInfo(filePath).Length;
+            if (doGzip)
+            {
+                using (var ms = new MemoryStream())
+                {
+                    using (var gs = new GZipStream(ms, CompressionMode.Compress, true))
+                    using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, (int)Math.Min(81920, fileSize), FileOptions.SequentialScan))
+                    {
+                        fs.CopyTo(gs);
+                    }
+                    if (ms.Length < fileSize)
+                    {
+                        ms.Position = 0;
+                        response.AddHeader("Content-Encoding", "gzip");
+                        response.ContentLength64 = ms.Length;
+                        if (shouldTransferBody)
+                        {
+                            ms.CopyTo(response.OutputStream);
+                        }
+                        return;
+                    }
+                }
+            }
+
             response.ContentLength64 = fileSize;
             if (shouldTransferBody)
             {
@@ -1230,6 +1304,10 @@ namespace SimpleHttpServer
         /// </summary>
         public bool TreatPrefixRootAsLocalRoot { get; private set; }
         /// <summary>
+        /// True to compress text data with GZIP format.
+        /// </summary>
+        public bool UseGzip { get; private set; }
+        /// <summary>
         /// True to launch default web browser after starting listening.
         /// </summary>
         public bool ShouldLaunchWebBrowser { get; private set; }
@@ -1249,6 +1327,7 @@ namespace SimpleHttpServer
         /// <param name="localRootPath">Local root path.</param>
         /// <param name="prefixRoot">Root path of the prefix.</param>
         /// <param name="treatPrefixRootAsLocalRoot">True to treat the prefix root directory as the local root directory.</param>
+        /// <param name="useGzip">True to compress text data with GZIP format.</param>
         /// <param name="shouldLaunchWebBrowser">True to launch default web browser after starting listening.</param>
         /// <param name="isGenerateHtml5IndexPage">True to create HTML5 index page, otherwise false (create HTML4.01 index page).</param>
         /// <param name="logFormatType">Log format type.</param>
@@ -1257,6 +1336,7 @@ namespace SimpleHttpServer
             string localRootPath,
             string prefixRoot,
             bool treatPrefixRootAsLocalRoot,
+            bool useGzip,
             bool shouldLaunchWebBrowser,
             bool isGenerateHtml5IndexPage,
             LogFormatType logFormatType)
@@ -1265,6 +1345,7 @@ namespace SimpleHttpServer
             LocalRootPath = localRootPath;
             PrefixRoot = prefixRoot;
             TreatPrefixRootAsLocalRoot = treatPrefixRootAsLocalRoot;
+            UseGzip = useGzip;
             ShouldLaunchWebBrowser = shouldLaunchWebBrowser;
             LogFormatType = logFormatType;
             IsGenerateHtml5IndexPage = isGenerateHtml5IndexPage;
