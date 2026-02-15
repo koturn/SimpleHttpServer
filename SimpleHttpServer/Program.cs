@@ -468,7 +468,8 @@ namespace SimpleHttpServer
                                     switch (request.HttpMethod)
                                     {
                                         case "GET":
-                                            HandleAsGetRequest(request, response, appOptions);
+                                        case "HEAD":
+                                            HandleAsGetOrHeadRequest(request, response, appOptions);
                                             break;
                                         default:
                                             response.StatusCode = (int)HttpStatusCode.NotImplemented;
@@ -626,12 +627,12 @@ namespace SimpleHttpServer
         }
 
         /// <summary>
-        /// Handle <see cref="HttpListenerRequest"/> as a "GET" request.
+        /// Handle <see cref="HttpListenerRequest"/> as a "GET" or "HEAD" request.
         /// </summary>
         /// <param name="request">A <see cref="HttpListenerRequest"/>.</param>
         /// <param name="response">A <see cref="HttpListenerResponse"/>.</param>
         /// <param name="appOptions">Application options.</param>
-        private static void HandleAsGetRequest(HttpListenerRequest request, HttpListenerResponse response, AppOptions appOptions)
+        private static void HandleAsGetOrHeadRequest(HttpListenerRequest request, HttpListenerResponse response, AppOptions appOptions)
         {
             string paramPart;
             var rawPath = RemoveUrlParameter(request.RawUrl, out paramPart);
@@ -667,6 +668,8 @@ namespace SimpleHttpServer
                 return;
             }
 
+            var shouldTransferBody = request.HttpMethod != "HEAD";
+
             if (Directory.Exists(entryPath))
             {
                 if (entryPath.EndsWith(_dirSep))
@@ -676,13 +679,13 @@ namespace SimpleHttpServer
                     var indexPath = entryPath + "index.html";
                     if (File.Exists(indexPath))
                     {
-                        TransferFile(response, indexPath);
+                        TransferFile(response, indexPath, shouldTransferBody);
                     }
                     else
                     {
                         var rootFaviconPath = appOptions.PrefixRoot + "/favicon.ico";
                         var indexPage = CreateIndexPage(entryPath, rawPath, rootFaviconPath, appOptions.IsGenerateHtml5IndexPage);
-                        TransferData(response, Encoding.UTF8.GetBytes(indexPage));
+                        TransferTextData(response, indexPage, Encoding.UTF8, shouldTransferBody);
                     }
                 }
                 else
@@ -701,7 +704,7 @@ namespace SimpleHttpServer
 #else
                     response.ContentType = MimeMapper.GetMimeType(entryPath);
 #endif  // USE_SYSTEM_WEB_MIME_MAPPING
-                    TransferFile(response, entryPath);
+                    TransferFile(response, entryPath, shouldTransferBody);
                 }
                 catch (Exception ex)
                 {
@@ -727,7 +730,7 @@ namespace SimpleHttpServer
                     else
                     {
                         response.ContentType = "image/x-icon";
-                        TransferData(response, iconData);
+                        TransferData(response, iconData, shouldTransferBody);
                     }
                 }
                 else
@@ -735,9 +738,8 @@ namespace SimpleHttpServer
                 if (rawPath == "/.well-known/appspecific/com.chrome.devtools.json" && request.IsLocal)
                 {
                     var chromeDevToolJson = CreateChromeDevToolJson(appOptions.LocalRootPath);
-                    var content = Encoding.UTF8.GetBytes(chromeDevToolJson);
                     response.ContentType = "application/json";
-                    TransferData(response, content);
+                    TransferTextData(response, chromeDevToolJson, Encoding.UTF8, shouldTransferBody);
                 }
                 else
                 {
@@ -899,10 +901,33 @@ namespace SimpleHttpServer
         /// </summary>
         /// <param name="response"><see cref="HttpListenerRequest"/> to transfer.</param>
         /// <param name="data">Byte data to transfer.</param>
-        private static void TransferData(HttpListenerResponse response, byte[] data)
+        /// <param name="shouldTransferBody">True to write actual data.</param>
+        private static void TransferData(HttpListenerResponse response, byte[] data, bool shouldTransferBody)
         {
             response.ContentLength64 = data.Length;
-            response.OutputStream.Write(data, 0, data.Length);
+            if (shouldTransferBody)
+            {
+                response.OutputStream.Write(data, 0, data.Length);
+            }
+        }
+
+        /// <summary>
+        /// Transfer specified byte data.
+        /// </summary>
+        /// <param name="response"><see cref="HttpListenerRequest"/> to transfer.</param>
+        /// <param name="text">Text to transfer.</param>
+        /// <param name="encoding">Encoding for <paramref name="text"/>.</param>
+        /// <param name="shouldTransferBody">True to write actual data.</param>
+        private static void TransferTextData(HttpListenerResponse response, string text, Encoding encoding, bool shouldTransferBody)
+        {
+            if (shouldTransferBody)
+            {
+                TransferData(response, encoding.GetBytes(text), true);
+            }
+            else
+            {
+                response.ContentLength64 = encoding.GetByteCount(text);
+            }
         }
 
         /// <summary>
@@ -910,13 +935,17 @@ namespace SimpleHttpServer
         /// </summary>
         /// <param name="response"><see cref="HttpListenerRequest"/> to transfer.</param>
         /// <param name="filePath">File path to read from.</param>
-        private static void TransferFile(HttpListenerResponse response, string filePath)
+        /// <param name="shouldTransferBody">True to write actual data.</param>
+        private static void TransferFile(HttpListenerResponse response, string filePath, bool shouldTransferBody)
         {
             var fileSize = new FileInfo(filePath).Length;
-            using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, (int)Math.Min(81920, fileSize), FileOptions.SequentialScan))
+            response.ContentLength64 = fileSize;
+            if (shouldTransferBody)
             {
-                response.ContentLength64 = fileSize;
-                fs.CopyTo(response.OutputStream);
+                using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, (int)Math.Min(81920, fileSize), FileOptions.SequentialScan))
+                {
+                    fs.CopyTo(response.OutputStream);
+                }
             }
         }
 
