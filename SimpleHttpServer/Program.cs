@@ -899,7 +899,7 @@ namespace SimpleHttpServer
         /// <summary>
         /// Transfer specified byte data.
         /// </summary>
-        /// <param name="response"><see cref="HttpListenerRequest"/> to transfer.</param>
+        /// <param name="response">Destination <see cref="HttpListenerResponse"/>.</param>
         /// <param name="data">Byte data to transfer.</param>
         /// <param name="shouldTransferBody">True to write actual data.</param>
         private static void TransferData(HttpListenerResponse response, byte[] data, bool shouldTransferBody)
@@ -914,7 +914,7 @@ namespace SimpleHttpServer
         /// <summary>
         /// Transfer specified byte data.
         /// </summary>
-        /// <param name="response"><see cref="HttpListenerRequest"/> to transfer.</param>
+        /// <param name="response">Destination <see cref="HttpListenerResponse"/>.</param>
         /// <param name="text">Text to transfer.</param>
         /// <param name="encoding">Encoding for <paramref name="text"/>.</param>
         /// <param name="shouldTransferBody">True to write actual data.</param>
@@ -933,7 +933,7 @@ namespace SimpleHttpServer
         /// <summary>
         /// Transfer file content.
         /// </summary>
-        /// <param name="response"><see cref="HttpListenerRequest"/> to transfer.</param>
+        /// <param name="response">Destination <see cref="HttpListenerResponse"/>.</param>
         /// <param name="filePath">File path to read from.</param>
         /// <param name="shouldTransferBody">True to write actual data.</param>
         private static void TransferFile(HttpListenerResponse response, string filePath, bool shouldTransferBody)
