@@ -474,6 +474,9 @@ namespace SimpleHttpServer
                                         case "HEAD":
                                             HandleAsGetOrHeadRequest(request, response, appOptions);
                                             break;
+                                        case "TRACE":
+                                            HandleAsTraceRequest(request, response);
+                                            break;
                                         default:
                                             response.StatusCode = (int)HttpStatusCode.NotImplemented;
                                             break;
@@ -749,6 +752,26 @@ namespace SimpleHttpServer
                     response.StatusCode = (int)HttpStatusCode.NotFound;
                 }
             }
+        }
+
+        /// <summary>
+        /// Handle <see cref="HttpListenerRequest"/> as a "TRACE" request.
+        /// </summary>
+        /// <param name="request">A <see cref="HttpListenerRequest"/>.</param>
+        /// <param name="response">A <see cref="HttpListenerResponse"/>.</param>
+        private static void HandleAsTraceRequest(HttpListenerRequest request, HttpListenerResponse response)
+        {
+            var sb = new StringBuilder()
+                .AppendFormat("{0} {1} HTTP/{2}", request.HttpMethod, request.RawUrl, request.ProtocolVersion)
+                .AppendLine();
+
+            var headers = request.Headers;
+            foreach (var key in headers.AllKeys)
+            {
+                sb.Append(key).Append(": ").AppendLine(headers[key]);
+            }
+
+            TransferTextData(response, sb.ToString(), Encoding.UTF8, true);
         }
 
         /// <summary>
