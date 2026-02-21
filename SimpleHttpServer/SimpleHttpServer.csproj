@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net481;net10.0</TargetFrameworks>
+    <TargetFrameworks>net481;net10.0;net10.0-windows</TargetFrameworks>
     <ApplicationIcon>favicon.ico</ApplicationIcon>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <LangVersion Condition="'$(TargetFramework)'!='net481'">14</LangVersion>
@@ -31,6 +31,10 @@
 
   <ItemGroup>
     <None Include="AssemblyInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)'=='net10.0-windows'">
+    <PackageReference Include="System.Drawing.Common" Version="10.0.3" />
   </ItemGroup>
 
 </Project>

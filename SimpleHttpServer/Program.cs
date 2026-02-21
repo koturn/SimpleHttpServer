@@ -1,3 +1,9 @@
+#if NET9_0_OR_GREATER
+#    define SUPPORT_GENERATED_REGEX_PROPERTY
+#endif  // NET9_0_OR_GREATER
+#if NET7_0_OR_GREATER
+#    define SUPPORT_GENERATED_REGEX
+#endif  // NET7_0_OR_GREATER
 #if NET7_0_OR_GREATER
 #    define SUPPORT_LIBRARY_IMPORT
 #endif  // NET7_0_OR_GREATER
@@ -16,6 +22,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 #endif  // USE_WIN32ICON_AS_FAVICON
 using System.Diagnostics;
+#if NETFRAMEWORK || WINDOWS
+using System.Drawing;
+using System.Drawing.Imaging;
+#endif  // NETFRAMEWORK || WINDOWS
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
@@ -29,6 +39,7 @@ using System.Runtime.InteropServices;
 using System.Security;
 #endif  // USE_WIN32ICON_AS_FAVICON
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 #if USE_SYSTEM_WEB_MIME_MAPPING
@@ -144,6 +155,12 @@ namespace SimpleHttpServer
         /// Cached embedded icon data.
         /// </summary>
         private static byte[] _iconData = null;
+#if (USE_WIN32ICON_AS_FAVICON || USE_EMBEDDED_ICON_AS_FAVICON) && (NETFRAMEWORK || WINDOWS)
+        /// <summary>
+        /// Cache dictionary of apple-touch-icon data.
+        /// </summary>
+        private static readonly Dictionary<int, byte[]> _appleTouchIconDataCacheDict = new Dictionary<int, byte[]>();
+#endif  // WINDOWS
         /// <summary>
         /// Cached <see cref="Guid"/>.
         /// </summary>
@@ -768,6 +785,29 @@ namespace SimpleHttpServer
                         TransferData(response, iconData, doGzip, shouldTransferBody);
                     }
                 }
+#if NETFRAMEWORK || WINDOWS
+                else if (rawPath.StartsWith("/apple-touch-icon"))
+                {
+                    var match = RegexProvider.AppleTouchIconSuffixRegex.Match(rawPath, 17, rawPath.Length - 17);
+                    if (!match.Success)
+                    {
+                        response.StatusCode = (int)HttpStatusCode.NotFound;
+                        return;
+                    }
+
+                    var groups = match.Groups;
+                    var sizeText = groups[1].Value;
+                    var appleTouchIconData = GetAppleTouchIconData(sizeText.Length == 0 ? -1 : int.Parse(sizeText));
+                    if (appleTouchIconData.Length == 0)
+                    {
+                        response.StatusCode = (int)HttpStatusCode.NotFound;
+                        return;
+                    }
+
+                    response.ContentType = "image/png";
+                    TransferData(response, appleTouchIconData, false, shouldTransferBody);
+                }
+#endif  // NETFRAMEWORK || WINDOWS
                 else
 #endif  // USE_WIN32ICON_AS_FAVICON || USE_EMBEDDED_ICON_AS_FAVICON
                 if (rawPath == "/.well-known/appspecific/com.chrome.devtools.json" && request.IsLocal)
@@ -1257,6 +1297,52 @@ namespace SimpleHttpServer
 
             return _iconData = Array.Empty<byte>();
         }
+
+#if NETFRAMEWORK || WINDOWS
+        /// <summary>
+        /// Get apple-touch-icon data. (PNG file data)
+        /// </summary>
+        /// <param name="size">Width and height of apple-touch-icon.</param>
+        /// <returns>Apple-touch-icon data.</returns>
+        private static byte[] GetAppleTouchIconData(int size)
+        {
+            if (size == -1)
+            {
+                size = 180;
+            }
+
+            if (size < 8 || size > 256)
+            {
+                return Array.Empty<byte>();
+            }
+
+            byte[] appleTouchIconData;
+            if (_appleTouchIconDataCacheDict.TryGetValue(size, out appleTouchIconData))
+            {
+                return appleTouchIconData;
+            }
+
+            var iconData = GetSelfIconData();
+            if (iconData.Length == 0)
+            {
+                appleTouchIconData = Array.Empty<byte>();
+            }
+            else
+            {
+                using (var iconMs = new MemoryStream(iconData))
+                using (var icon = new Icon(iconMs, size, size))
+                using (var bmp = icon.ToBitmap())
+                using (var pngMs = new MemoryStream())
+                {
+                    bmp.Save(pngMs, ImageFormat.Png);
+                    appleTouchIconData = pngMs.ToArray();
+                }
+            }
+
+            _appleTouchIconDataCacheDict.Add(size, appleTouchIconData);
+            return appleTouchIconData;
+        }
+#endif  // NETFRAMEWORK || WINDOWS
 #endif  // USE_WIN32ICON_AS_FAVICON || USE_EMBEDDED_ICON_AS_FAVICON
 
 #if USE_EMBEDDED_ICON_AS_FAVICON
@@ -2170,4 +2256,48 @@ namespace SimpleHttpServer
         }
     }
 #endif  // USE_WIN32ICON_AS_FAVICON
+
+#if (USE_WIN32ICON_AS_FAVICON || USE_EMBEDDED_ICON_AS_FAVICON) && (NETFRAMEWORK || WINDOWS)
+    /// <summary>
+    /// Provides some <see cref="Regex"/> instances.
+    /// </summary>
+#if SUPPORT_GENERATED_REGEX
+    internal static partial class RegexProvider
+#else
+    internal static class RegexProvider
+#endif  // SUPPORT_GENERATED_REGEX
+    {
+        /// <summary>
+        /// Options for <see cref="Regex"/> instances.
+        /// </summary>
+        private const RegexOptions Options = RegexOptions.Compiled | RegexOptions.CultureInvariant;
+
+        /// <summary>
+        /// <see cref="Regex"/> pattern <see cref="string"/> matching suffix of well-known apple-touch-icon file name.
+        /// </summary>
+        internal const string AppleTouchIconSuffixPattern = @"^(?:-(\d+)x(\d+))?(?:-precomposed)?\.png$";
+
+        /// <summary>
+        /// <see cref="Regex"/> instance matching suffix of well-known apple-touch-icon file name.
+        /// </summary>
+#if SUPPORT_GENERATED_REGEX_PROPERTY
+        [GeneratedRegex(AppleTouchIconSuffixPattern, Options)]
+        public static partial Regex AppleTouchIconSuffixRegex { get; }
+#elif SUPPORT_GENERATED_REGEX
+        public static Regex AppleTouchIconSuffixRegex => GetAppleTouchIconSuffixRegex();
+        /// <summary>
+        /// Get <see cref="Regex"/> instance matching suffix of well-known apple-touch-icon file name.
+        /// </summary>
+        /// <returns><see cref="Regex"/> instance matching suffix of well-known apple-touch-icon file name.</returns>
+        [GeneratedRegex(AppleTouchIconSuffixPattern, Options)]
+        private static partial Regex GetAppleTouchIconSuffixRegex();
+#else
+        public static Regex AppleTouchIconSuffixRegex { get { return  _appleTouchIconSuffixRegex ?? (_appleTouchIconSuffixRegex = new Regex(AppleTouchIconSuffixPattern, Options)); } }
+        /// <summary>
+        /// Backing field of <see cref="AppleTouchIconSuffixRegex"/>.
+        /// </summary>
+        private static Regex _appleTouchIconSuffixRegex;
+#endif  // SUPPORT_GENERATED_REGEX_PROPERTY
+    }
+#endif  // (USE_WIN32ICON_AS_FAVICON || USE_EMBEDDED_ICON_AS_FAVICON) && (NETFRAMEWORK || WINDOWS)
 }

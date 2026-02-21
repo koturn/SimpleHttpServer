@@ -7,6 +7,7 @@ ARTIFACTS_SUBDIR_BASENAME = $(SOLUTION_NAME)
 ARTIFACTS_BASENAME = $(SOLUTION_NAME)
 BUILD_CONFIG = Release
 TARGET_NET10 = net10.0
+TARGET_NET10WIN = net10.0-windows
 TARGET_NFW481 = net481
 SINGLE_SUFFIX = -single
 AOT_SUFFIX = -aot
@@ -79,6 +80,59 @@ deploy-$(TARGET_NET10)$(AOT_SUFFIX):
 		$(ARTIFACTS_BASENAME)-$(TARGET_NET10)$(AOT_SUFFIX).zip 2>NUL
 	cd $(ARTIFACTS_BASEDIR)
 	powershell Compress-Archive -Path $(ARTIFACTS_SUBDIR_BASENAME)-$(TARGET_NET10)$(AOT_SUFFIX) -DestinationPath ..\$(ARTIFACTS_BASENAME)-$(TARGET_NET10)$(AOT_SUFFIX).zip
+	cd $(MAKEDIR)
+
+deploy-$(TARGET_NET10WIN):
+	-dotnet publish -c $(BUILD_CONFIG) -f $(TARGET_NET10WIN) --no-self-contained \
+		-p:PublishDir=..\$(ARTIFACTS_BASEDIR)\$(ARTIFACTS_SUBDIR_BASENAME)-$(TARGET_NET10WIN) \
+		-p:PublishTrimmed=false \
+		-p:PublishAot=false \
+		$(MAIN_PROJECT_FILE)
+	-$(RM) $(ARTIFACTS_BASEDIR)\$(ARTIFACTS_SUBDIR_BASENAME)-$(TARGET_NET10WIN)\*.pdb \
+		$(ARTIFACTS_BASEDIR)\$(ARTIFACTS_SUBDIR_BASENAME)-$(TARGET_NET10WIN)\*.xml \
+		$(ARTIFACTS_BASENAME)-$(TARGET_NET10WIN).zip 2>NUL
+	cd $(ARTIFACTS_BASEDIR)
+	powershell Compress-Archive -Path $(ARTIFACTS_SUBDIR_BASENAME)-$(TARGET_NET10WIN) -DestinationPath ..\$(ARTIFACTS_BASENAME)-$(TARGET_NET10WIN).zip
+	cd $(MAKEDIR)
+
+deploy-$(TARGET_NET10WIN)$(SINGLE_SUFFIX):
+	-dotnet publish -c $(BUILD_CONFIG) -f $(TARGET_NET10WIN) --self-contained \
+		-p:PublishDir=..\$(ARTIFACTS_BASEDIR)\$(ARTIFACTS_SUBDIR_BASENAME)-$(TARGET_NET10WIN)$(SINGLE_SUFFIX) \
+		-p:PublishAot=false \
+		-p:PublishSingleFile=true \
+		-p:PublishReadyToRun=true \
+		$(MAIN_PROJECT_FILE)
+	-$(RM) $(ARTIFACTS_BASEDIR)\$(ARTIFACTS_SUBDIR_BASENAME)-$(TARGET_NET10WIN)$(SINGLE_SUFFIX)\*.pdb \
+		$(ARTIFACTS_BASEDIR)\$(ARTIFACTS_SUBDIR_BASENAME)-$(TARGET_NET10WIN)$(SINGLE_SUFFIX)\*.xml \
+		$(ARTIFACTS_BASENAME)-$(TARGET_NET10WIN)$(SINGLE_SUFFIX).zip 2>NUL
+	cd $(ARTIFACTS_BASEDIR)
+	powershell Compress-Archive -Path $(ARTIFACTS_SUBDIR_BASENAME)-$(TARGET_NET10WIN)$(SINGLE_SUFFIX) -DestinationPath ..\$(ARTIFACTS_BASENAME)-$(TARGET_NET10WIN)$(SINGLE_SUFFIX).zip
+	cd $(MAKEDIR)
+
+deploy-$(TARGET_NET10WIN)$(AOT_SUFFIX):
+	-dotnet publish -c $(BUILD_CONFIG) -f $(TARGET_NET10WIN) --self-contained \
+		-p:PublishDir=..\$(ARTIFACTS_BASEDIR)\$(ARTIFACTS_SUBDIR_BASENAME)-$(TARGET_NET10WIN)$(AOT_SUFFIX) \
+		-p:OptimizationPreference=Speed \
+		-p:InvariantGlobalization=true \
+		-p:StripSymbols=true \
+		-p:DebuggerSupport=false \
+		-p:EnableUnsafeBinaryFormatterSerialization=false \
+		-p:EventSourceSupport=false \
+		-p:HttpActivityPropagationSupport=false \
+		-p:IlcDisableReflection=true \
+		-p:IlcFoldIdenticalMethodBodies=true \
+		-p:IlcGenerateCompleteTypeMetadata=false \
+		-p:IlcGenerateStackTraceData=false \
+		-p:IlcOptimizationPreference=Speed \
+		-p:MetadataUpdaterSupport=false \
+		-p:RootAllApplicationAssemblies=false \
+		-p:UseSystemResourceKeys=true \
+		$(MAIN_PROJECT_FILE)
+	-$(RM) $(ARTIFACTS_BASEDIR)\$(ARTIFACTS_SUBDIR_BASENAME)-$(TARGET_NET10WIN)$(AOT_SUFFIX)\*.pdb \
+		$(ARTIFACTS_BASEDIR)\$(ARTIFACTS_SUBDIR_BASENAME)-$(TARGET_NET10WIN)$(AOT_SUFFIX)\*.xml \
+		$(ARTIFACTS_BASENAME)-$(TARGET_NET10WIN)$(AOT_SUFFIX).zip 2>NUL
+	cd $(ARTIFACTS_BASEDIR)
+	powershell Compress-Archive -Path $(ARTIFACTS_SUBDIR_BASENAME)-$(TARGET_NET10WIN)$(AOT_SUFFIX) -DestinationPath ..\$(ARTIFACTS_BASENAME)-$(TARGET_NET10WIN)$(AOT_SUFFIX).zip
 	cd $(MAKEDIR)
 
 deploy-$(TARGET_NFW481):
