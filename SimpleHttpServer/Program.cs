@@ -795,9 +795,11 @@ namespace SimpleHttpServer
                         return;
                     }
 
-                    var groups = match.Groups;
-                    var sizeText = groups[1].Value;
-                    var appleTouchIconData = GetAppleTouchIconData(sizeText.Length == 0 ? -1 : int.Parse(sizeText));
+                    var sizeText = match.Groups[1].Value;
+                    var size = sizeText.Length == 0 ? -1 : int.Parse(sizeText);
+
+                    var faviconPath = Path.Combine(appOptions.LocalRootPath, "favicon.ico");
+                    var appleTouchIconData = CreateAppleTouchIconData(faviconPath, size);
                     if (appleTouchIconData.Length == 0)
                     {
                         response.StatusCode = (int)HttpStatusCode.NotFound;
@@ -1302,9 +1304,10 @@ namespace SimpleHttpServer
         /// <summary>
         /// Get apple-touch-icon data. (PNG file data)
         /// </summary>
+        /// <param name="faviconPath">Path to the <c>favicon.ico</c>.</param>
         /// <param name="size">Width and height of apple-touch-icon.</param>
         /// <returns>Apple-touch-icon data.</returns>
-        private static byte[] GetAppleTouchIconData(int size)
+        private static byte[] CreateAppleTouchIconData(string faviconPath, int size)
         {
             if (size == -1)
             {
@@ -1322,25 +1325,49 @@ namespace SimpleHttpServer
                 return appleTouchIconData;
             }
 
-            var iconData = GetSelfIconData();
-            if (iconData.Length == 0)
+            if (File.Exists(faviconPath))
             {
-                appleTouchIconData = Array.Empty<byte>();
+                using (var iconMs = new FileStream(faviconPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 81920))
+                {
+                    appleTouchIconData = CreatePngFromIcon(iconMs, size, size);
+                }
             }
             else
             {
-                using (var iconMs = new MemoryStream(iconData))
-                using (var icon = new Icon(iconMs, size, size))
-                using (var bmp = icon.ToBitmap())
-                using (var pngMs = new MemoryStream())
+                var iconData = GetSelfIconData();
+                if (iconData.Length == 0)
                 {
-                    bmp.Save(pngMs, ImageFormat.Png);
-                    appleTouchIconData = pngMs.ToArray();
+                    appleTouchIconData = Array.Empty<byte>();
+                }
+                else
+                {
+                    using (var iconMs = new MemoryStream(iconData))
+                    {
+                        appleTouchIconData = CreatePngFromIcon(iconMs, size, size);
+                    }
                 }
             }
 
             _appleTouchIconDataCacheDict.Add(size, appleTouchIconData);
             return appleTouchIconData;
+        }
+
+        /// <summary>
+        /// Create PNG data from icon file data.
+        /// </summary>
+        /// <param name="iconStream"><see cref="Stream"/> of the source icon data.</param>
+        /// <param name="width">Width of the result png data.</param>
+        /// <param name="height">Height of the result png data.</param>
+        /// <returns>PNG data.</returns>
+        private static byte[] CreatePngFromIcon(Stream iconStream, int width, int height)
+        {
+            using (var icon = new Icon(iconStream, width, height))
+            using (var bmp = icon.ToBitmap())
+            using (var pngMs = new MemoryStream())
+            {
+                bmp.Save(pngMs, ImageFormat.Png);
+                return pngMs.ToArray();
+            }
         }
 #endif  // NETFRAMEWORK || WINDOWS
 #endif  // USE_WIN32ICON_AS_FAVICON || USE_EMBEDDED_ICON_AS_FAVICON
