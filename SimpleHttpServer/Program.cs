@@ -724,27 +724,26 @@ namespace SimpleHttpServer
 
             if (Directory.Exists(entryPath))
             {
-                if (entryPath.EndsWith(_dirSep))
-                {
-                    response.ContentType = "text/html";
-
-                    var indexPath = entryPath + "index.html";
-                    if (File.Exists(indexPath))
-                    {
-                        TransferFile(response, indexPath, doGzip, shouldTransferBody);
-                    }
-                    else
-                    {
-                        var rootFaviconPath = appOptions.PrefixRoot + "/favicon.ico";
-                        var indexPage = CreateIndexPage(entryPath, rawPath, rootFaviconPath, appOptions.IsGenerateHtml5IndexPage);
-                        TransferTextData(response, indexPage, Encoding.UTF8, doGzip, shouldTransferBody);
-                    }
-                }
-                else
+                if (!entryPath.EndsWith(_dirSep))
                 {
                     var redirectPath = rawPath + "/";
                     response.Headers.Set("Location", paramPart.Length == 0 ? redirectPath : (redirectPath + "?" + paramPart));
                     response.StatusCode = (int)HttpStatusCode.TemporaryRedirect;
+                    return;
+                }
+
+                response.ContentType = "text/html";
+
+                var indexPath = entryPath + "index.html";
+                if (File.Exists(indexPath))
+                {
+                    TransferFile(response, indexPath, doGzip, shouldTransferBody);
+                }
+                else
+                {
+                    var rootFaviconPath = appOptions.PrefixRoot + "/favicon.ico";
+                    var indexPage = CreateIndexPage(entryPath, rawPath, rootFaviconPath, appOptions.IsGenerateHtml5IndexPage);
+                    TransferTextData(response, indexPage, Encoding.UTF8, doGzip, shouldTransferBody);
                 }
             }
             else if (File.Exists(entryPath))
