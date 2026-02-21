@@ -1012,11 +1012,11 @@ namespace SimpleHttpServer
                     }
                     if (ms.Length < data.LongLength)
                     {
-                        ms.Position = 0;
                         response.AddHeader("Content-Encoding", "gzip");
                         response.ContentLength64 = ms.Length;
                         if (shouldTransferBody)
                         {
+                            ms.Position = 0;
                             ms.CopyTo(response.OutputStream);
                         }
                         return;
@@ -1072,11 +1072,11 @@ namespace SimpleHttpServer
                     }
                     if (ms.Length < fileSize)
                     {
-                        ms.Position = 0;
                         response.AddHeader("Content-Encoding", "gzip");
                         response.ContentLength64 = ms.Length;
                         if (shouldTransferBody)
                         {
+                            ms.Position = 0;
                             ms.CopyTo(response.OutputStream);
                         }
                         return;
