@@ -1003,7 +1003,7 @@ namespace SimpleHttpServer
         {
             if (doGzip)
             {
-                using (var ms = new MemoryStream())
+                using (var ms = new MemoryStream(data.Length))
                 {
                     using (var gs = new GZipStream(ms, CompressionMode.Compress, true))
                     {
@@ -1062,7 +1062,7 @@ namespace SimpleHttpServer
             var fileSize = new FileInfo(filePath).Length;
             if (doGzip)
             {
-                using (var ms = new MemoryStream())
+                using (var ms = new MemoryStream((int)fileSize))
                 {
                     using (var gs = new GZipStream(ms, CompressionMode.Compress, true))
                     using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, (int)Math.Min(81920, fileSize), FileOptions.SequentialScan))
