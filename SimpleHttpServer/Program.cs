@@ -486,53 +486,7 @@ namespace SimpleHttpServer
                     while (listener.IsListening)
                     {
                         var context = listener.GetContext();  // Wait for request.
-                        Task.Run(() =>
-                        {
-                            var request = context.Request;
-                            try
-                            {
-                                using (var response = context.Response)
-                                {
-                                    switch (request.HttpMethod)
-                                    {
-                                        case "GET":
-                                        case "HEAD":
-                                            HandleAsGetOrHeadRequest(request, response, appOptions);
-                                            break;
-                                        case "OPTIONS":
-                                            response.Headers.Add("Allow", "GET, HEAD, OPTIONS, TRACE");
-                                            break;
-                                        case "TRACE":
-                                            HandleAsTraceRequest(request, response);
-                                            break;
-                                        default:
-                                            response.StatusCode = (int)HttpStatusCode.NotImplemented;
-                                            break;
-                                    }
-
-                                    lock (_consoleLock)
-                                    {
-                                        if (appOptions.LogFormatType == LogFormatType.Combined)
-                                        {
-                                            WriteLogInCombinedLogFormat(Console.Out, request, response);
-                                        }
-                                        else
-                                        {
-                                            WriteLogInCommonLogFormat(Console.Out, request, response);
-                                        }
-                                    }
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                lock (_consoleLock)
-                                {
-                                    Console.ForegroundColor = ConsoleColor.Magenta;
-                                    Console.Error.WriteLine(ex);
-                                    Console.ResetColor();
-                                }
-                            }
-                        });
+                        StartHandleRequest(context, appOptions);
                     }
                 }
                 catch (HttpListenerException)
@@ -658,6 +612,63 @@ namespace SimpleHttpServer
         private static string GetCurrentTimestamp()
         {
             return DateTime.Now.ToString(DateTimeFormat);
+        }
+
+        /// <summary>
+        /// Handle <see cref="HttpListenerRequest"/> in specified <see cref="HttpListenerContext"/>.
+        /// </summary>
+        /// <param name="context">A <see cref="HttpListenerContext"/>.</param>
+        /// <param name="appOptions">Application options.</param>
+        /// <returns>Handling <see cref="Task"/>.</returns>
+        private static Task StartHandleRequest(HttpListenerContext context, AppOptions appOptions)
+        {
+            return Task.Run(() =>
+            {
+                var request = context.Request;
+                try
+                {
+                    using (var response = context.Response)
+                    {
+                        switch (request.HttpMethod)
+                        {
+                            case "GET":
+                            case "HEAD":
+                                HandleAsGetOrHeadRequest(request, response, appOptions);
+                                break;
+                            case "OPTIONS":
+                                response.Headers.Add("Allow", "GET, HEAD, OPTIONS, TRACE");
+                                break;
+                            case "TRACE":
+                                HandleAsTraceRequest(request, response);
+                                break;
+                            default:
+                                response.StatusCode = (int)HttpStatusCode.NotImplemented;
+                                break;
+                        }
+
+                        lock (_consoleLock)
+                        {
+                            if (appOptions.LogFormatType == LogFormatType.Combined)
+                            {
+                                WriteLogInCombinedLogFormat(Console.Out, request, response);
+                            }
+                            else
+                            {
+                                WriteLogInCommonLogFormat(Console.Out, request, response);
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    lock (_consoleLock)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Magenta;
+                        Console.Error.WriteLine(ex);
+                        Console.ResetColor();
+                    }
+                }
+            });
         }
 
         /// <summary>
