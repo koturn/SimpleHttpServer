@@ -1073,10 +1073,10 @@ namespace SimpleHttpServer
             var fileSize = new FileInfo(filePath).Length;
             if (doGzip)
             {
+                using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, (int)Math.Min(81920, fileSize), FileOptions.SequentialScan))
                 using (var ms = new MemoryStream((int)fileSize))
                 {
                     using (var gs = new GZipStream(ms, CompressionMode.Compress, true))
-                    using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, (int)Math.Min(81920, fileSize), FileOptions.SequentialScan))
                     {
                         fs.CopyTo(gs);
                     }
@@ -1089,17 +1089,27 @@ namespace SimpleHttpServer
                             ms.Position = 0;
                             ms.CopyTo(response.OutputStream);
                         }
-                        return;
+                    }
+                    else
+                    {
+                        response.ContentLength64 = fileSize;
+                        if (shouldTransferBody)
+                        {
+                            fs.Position = 0;
+                            fs.CopyTo(response.OutputStream);
+                        }
                     }
                 }
             }
-
-            response.ContentLength64 = fileSize;
-            if (shouldTransferBody)
+            else
             {
-                using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, (int)Math.Min(81920, fileSize), FileOptions.SequentialScan))
+                response.ContentLength64 = fileSize;
+                if (shouldTransferBody)
                 {
-                    fs.CopyTo(response.OutputStream);
+                    using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, (int)Math.Min(81920, fileSize), FileOptions.SequentialScan))
+                    {
+                        fs.CopyTo(response.OutputStream);
+                    }
                 }
             }
         }
