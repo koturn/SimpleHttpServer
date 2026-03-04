@@ -54,6 +54,7 @@ Variout options are available.
 | `--legacy-index-page` | Generate index page written in HTML4.01. |
 | `--log-format-common` | Write logs in common log format. |
 | `--log-format-combined` | Write logs in combined log format. (Default) |
+| `--reverse-proxy` | Set reverse proxy rooting. |
 
 ## LICENSE
 

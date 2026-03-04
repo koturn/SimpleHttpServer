@@ -13,6 +13,10 @@
 // #define USE_SYSTEM_WEB_MIME_MAPPING
 #define USE_ASMGUID_FOR_CHROME_DEVTOOL_JSON
 
+#if !NET45_OR_GREATER && !NETCOREAPP
+#define USE_LEGACY_HTTP_API
+#endif  // !NET45_OR_GREATER
+
 using System;
 #if NET8_0_OR_GREATER
 using System.Collections.Frozen;
@@ -30,6 +34,9 @@ using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
+#if !USE_LEGACY_HTTP_API
+using System.Net.Http;
+#endif  // !USE_LEGACY_HTTP_API
 using System.Net.NetworkInformation;
 #if USE_ASMGUID_FOR_CHROME_DEVTOOL_JSON
 using System.Reflection;
@@ -131,6 +138,9 @@ namespace SimpleHttpServer
         /// </summary>
         private static readonly bool _isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 #endif  // !NETFRAMEWORK && !WINDOWS
+#if !USE_LEGACY_HTTP_API
+        private static readonly HttpClient _httpClient = new HttpClient();
+#endif  // !USE_LEGACY_HTTP_API
         /// <summary>
         /// Directory separator.
         /// </summary>
@@ -283,6 +293,7 @@ namespace SimpleHttpServer
             var shouldLaunchWebBrowser = false;
             var isGenerateHtml5IndexPage = true;
             var logFormatType = LogFormatType.Combined;
+            var reverseProxyDict = new Dictionary<string, string>();
 
             var fallbackToFreePort = true;
             var treatNonOptionArg = false;
@@ -362,6 +373,15 @@ namespace SimpleHttpServer
                         case "--log-format-combined":
                             logFormatType = LogFormatType.Combined;
                             break;
+                        case "--reverse-proxy":
+                            i++;
+                            var splitPos = args[i].IndexOf(':');
+                            if (splitPos == -1)
+                            {
+                                throw new InvalidOperationException("Argument for --reverse-proxy is invalid: " + args[i]);
+                            }
+                            reverseProxyDict.Add(args[i].Substring(0, splitPos - 1), args[i].Substring(splitPos + 1));
+                            break;
                         case "--":
                             treatNonOptionArg = true;
                             break;
@@ -410,6 +430,7 @@ namespace SimpleHttpServer
                 useGzip,
                 shouldLaunchWebBrowser,
                 isGenerateHtml5IndexPage,
+                reverseProxyDict,
                 logFormatType);
         }
 
@@ -469,6 +490,8 @@ namespace SimpleHttpServer
             writer.WriteLine("    Write logs in common log format.");
             writer.WriteLine("  --log-format-combined");
             writer.WriteLine("    Write logs in combined log format. (Default)");
+            writer.WriteLine("  --reverse-proxy PATH:BACKEND_URL");
+            writer.WriteLine("    Set reverse proxy rooting.");
         }
 
         /// <summary>
@@ -629,21 +652,38 @@ namespace SimpleHttpServer
                 {
                     using (var response = context.Response)
                     {
-                        switch (request.HttpMethod)
+                        var isHandled = false;
+                        var rawUrl = request.RawUrl;
+                        var reverseProxyDict = appOptions.ReverseProxyDict;
+                        foreach (var uriPrefix in reverseProxyDict.Keys)
                         {
-                            case "GET":
-                            case "HEAD":
-                                HandleAsGetOrHeadRequest(request, response, appOptions);
+                            if (rawUrl.StartsWith(uriPrefix))
+                            {
+                                var targetUrl = reverseProxyDict[uriPrefix] + request.RawUrl.Substring(uriPrefix.Length);
+                                ForwardRequest(request, response, targetUrl);
+                                isHandled = true;
                                 break;
-                            case "OPTIONS":
-                                response.Headers.Add("Allow", "GET, HEAD, OPTIONS, TRACE");
-                                break;
-                            case "TRACE":
-                                HandleAsTraceRequest(request, response);
-                                break;
-                            default:
-                                response.StatusCode = (int)HttpStatusCode.NotImplemented;
-                                break;
+                            }
+                        }
+
+                        if (!isHandled)
+                        {
+                            switch (request.HttpMethod)
+                            {
+                                case "GET":
+                                case "HEAD":
+                                    HandleAsGetOrHeadRequest(request, response, appOptions);
+                                    break;
+                                case "OPTIONS":
+                                    response.Headers.Add("Allow", "GET, HEAD, OPTIONS, TRACE");
+                                    break;
+                                case "TRACE":
+                                    HandleAsTraceRequest(request, response);
+                                    break;
+                                default:
+                                    response.StatusCode = (int)HttpStatusCode.NotImplemented;
+                                    break;
+                            }
                         }
 
                         lock (_consoleLock)
@@ -670,6 +710,190 @@ namespace SimpleHttpServer
                 }
             });
         }
+
+        /// <summary>
+        /// Forward original request to the backend.
+        /// </summary>
+        /// <param name="request">Original request.</param>
+        /// <param name="response">Original respnse.</param>
+        /// <param name="targetUrl">Backend URL.</param>
+        private static void ForwardRequest(HttpListenerRequest request, HttpListenerResponse response, string targetUrl)
+        {
+#if USE_LEGACY_HTTP_API
+            //
+            // Replace the original request with a request to the backend.
+            //
+            var request2 = (HttpWebRequest)WebRequest.Create(targetUrl);
+            request2.Method = request.HttpMethod;
+
+            // Copy Request Headers.
+            var requestHeaders = request.Headers;
+            for (int i = 0; i < requestHeaders.Count; i++)
+            {
+                var key = requestHeaders.GetKey(i).ToLower();
+                var item = requestHeaders.Get(i).ToLower();
+
+                switch (key)
+                {
+                    case "host":
+                        // Do nothing.
+                        break;
+                    case "connection":
+                    case "proxy-connection":
+                        request2.KeepAlive = request.KeepAlive;
+                        break;
+                    case "referer":
+                        request2.Referer = item;
+                        break;
+                    case "user-agent":
+                        request2.UserAgent = item;
+                        break;
+                    case "accept":
+                        request2.Accept = item;
+                        break;
+                    case "content-length":
+                        request2.ContentLength = request.ContentLength64;
+                        break;
+                    case "content-type":
+                        request2.ContentType = item;
+                        break;
+                    case "if-modified-since":
+                        request2.IfModifiedSince = DateTime.Parse(item);
+                        break;
+                    default:
+                        try
+                        {
+                            request2.Headers.Set(key, item);
+                        }
+                        catch
+                        {
+                            Console.Error.WriteLine("Exception HttpProxyServer::CreateRequest header=" + key);
+                        }
+                        break;
+                }
+            }
+
+            if (request.HasEntityBody)
+            {
+                using (var inputStream = request.InputStream)
+                using (var requestStream = request2.GetRequestStream())
+                {
+                    inputStream.CopyTo(requestStream);
+                }
+            }
+
+            //
+            // Send request and replace the response from the backend with the original response.
+            //
+            try
+            {
+                using (var response2 = (HttpWebResponse)request2.GetResponse())
+                {
+                    response.StatusCode = (int)response2.StatusCode;
+                    response.ContentType = response2.ContentType;
+
+                    // Copy Response Headers.
+                    for (int i = 0; i < response2.Headers.Count; i++)
+                    {
+                        var key = response2.Headers.GetKey(i).ToLower();
+                        var item = response2.Headers.Get(i).ToLower();
+                        switch (key)
+                        {
+                            case "content-length":
+                                response.ContentLength64 = response2.ContentLength;
+                                break;
+                            case "keep-alive":
+                                Console.WriteLine("keep-alive: " + item);
+                                break;
+                            case "transfer-encoding":
+                                response.SendChunked = item.IndexOf("chunked") >= 0;
+                                break;
+                            default:
+                                try
+                                {
+                                    response.Headers.Set(key, item);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.Error.WriteLine(ex);
+                                }
+                                break;
+                        }
+                    }
+
+                    using (var responseStream = response2.GetResponseStream())
+                    using (var outputStream = response.OutputStream)
+                    {
+                        responseStream.CopyTo(outputStream);
+                    }
+                }
+            }
+            catch (WebException ex)
+            {
+                response.StatusCode = (int)((HttpWebResponse)ex.Response).StatusCode;
+            }
+#else
+            //
+            // Replace the original request with a request to the backend.
+            //
+            var requestMessage = new HttpRequestMessage(new HttpMethod(request.HttpMethod), targetUrl);
+            foreach (var header in request.Headers.AllKeys)
+            {
+                if (!WebHeaderCollection.IsRestricted(header))
+                {
+                    requestMessage.Headers.TryAddWithoutValidation(header, request.Headers[header]);
+                }
+            }
+            requestMessage.Headers.Add("X-Forwarded-For", request.RemoteEndPoint.Address.ToString());
+            requestMessage.Headers.Host = new Uri(targetUrl).Authority;
+
+            if (request.HasEntityBody)
+            {
+                using (var reader = new StreamReader(request.InputStream, request.ContentEncoding))
+                {
+                    var content = reader.ReadToEnd();
+                    requestMessage.Content = new StringContent(content, request.ContentEncoding, request.ContentType);
+                }
+            }
+
+            //
+            // Send request and replace the response from the backend with the original response.
+            //
+#if NETCOREAPP
+            using (var response2 = _httpClient.Send(requestMessage))
+#else
+            using (var response2 = _httpClient.SendAsync(requestMessage).Result)
+#endif  // NETCOREAPP
+            {
+                response.StatusCode = (int)response2.StatusCode;
+                var contentType = response2.Content.Headers.ContentType;
+                if (contentType != null)
+                {
+                    response.ContentType = contentType.ToString();
+                }
+
+                foreach (var header in response2.Headers)
+                {
+                    response.Headers[header.Key] = string.Join(",", header.Value);
+                }
+                foreach (var header in response2.Content.Headers)
+                {
+                    response.Headers[header.Key] = string.Join(",", header.Value);
+                }
+
+                response.ContentLength64 = (long)response2.Content.Headers.ContentLength;
+#if NETCOREAPP
+                using (var responseStream = response2.Content.ReadAsStream())
+#else
+                using (var responseStream = response2.Content.ReadAsStreamAsync().Result)
+#endif  // NETCOREAPP
+                using (var outputStream = response.OutputStream)
+                {
+                    responseStream.CopyTo(outputStream);
+                }
+            }
+#endif  // USE_LEGACY_HTTP_API
+            }
 
         /// <summary>
         /// Handle <see cref="HttpListenerRequest"/> as a "GET" or "HEAD" request.
@@ -1449,6 +1673,10 @@ namespace SimpleHttpServer
         /// </summary>
         public bool IsGenerateHtml5IndexPage { get; private set; }
         /// <summary>
+        /// Pairs of original path and backend URL.
+        /// </summary>
+        public Dictionary<string, string> ReverseProxyDict { get; private set; }
+        /// <summary>
         /// Log format type.
         /// </summary>
         public LogFormatType LogFormatType { get; private set; }
@@ -1463,6 +1691,7 @@ namespace SimpleHttpServer
         /// <param name="useGzip">True to compress text data with GZIP format.</param>
         /// <param name="shouldLaunchWebBrowser">True to launch default web browser after starting listening.</param>
         /// <param name="isGenerateHtml5IndexPage">True to create HTML5 index page, otherwise false (create HTML4.01 index page).</param>
+        /// <param name="reverseProxyDict">Pairs of original path and backend URL.</param>
         /// <param name="logFormatType">Log format type.</param>
         public AppOptions(
             List<string> prefixList,
@@ -1472,6 +1701,7 @@ namespace SimpleHttpServer
             bool useGzip,
             bool shouldLaunchWebBrowser,
             bool isGenerateHtml5IndexPage,
+            Dictionary<string, string> reverseProxyDict,
             LogFormatType logFormatType)
         {
             PrefixList = prefixList;
@@ -1480,8 +1710,9 @@ namespace SimpleHttpServer
             TreatPrefixRootAsLocalRoot = treatPrefixRootAsLocalRoot;
             UseGzip = useGzip;
             ShouldLaunchWebBrowser = shouldLaunchWebBrowser;
-            LogFormatType = logFormatType;
             IsGenerateHtml5IndexPage = isGenerateHtml5IndexPage;
+            ReverseProxyDict = reverseProxyDict;
+            LogFormatType = logFormatType;
         }
     }
 
