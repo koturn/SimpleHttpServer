@@ -46,9 +46,9 @@ Variout options are available.
 | `-g` | Use "+" as host part. |
 | `-h` | Show help message and exit program. |
 | `-H HOST` | Use specified host as host part. |
-| `-l DIR` | Use specified local directory as the root. |
+| `-l DIR` | Use specified local directory as the document root. |
 | `-r DIR` | Use specified directory for the part of directory of prefix. |
-| `-R` | Treat the prefix root directory as the local root directory. |
+| `-R` | Treat the prefix root directory as the document root directory. |
 | `-t` | Use `http://+:80/Temporary_Listen_Addresses/` as prefix. |
 | `-w` | Launch default web browser after starting listening. |
 | `--legacy-index-page` | Generate index page written in HTML4.01. |

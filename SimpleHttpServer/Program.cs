@@ -66,9 +66,9 @@ namespace SimpleHttpServer
     public static class Program
     {
         /// <summary>
-        /// Default local root path.
+        /// Default document root path.
         /// </summary>
-        private const string DefaultLocalRootPath = ".";
+        private const string DefaultDocumentRootPath = ".";
         /// <summary>
         /// Default host name for IPv4.
         /// </summary>
@@ -206,7 +206,7 @@ namespace SimpleHttpServer
                 Console.ForegroundColor = TimestampColor;
                 Console.Error.Write("[{0}]", GetCurrentTimestamp());
                 Console.ForegroundColor = ConsoleColor.White;
-                Console.Error.WriteLine(" Path binding: {0} -> {1}", appOptions.PrefixRoot.Length == 0 ? "/" : appOptions.PrefixRoot, appOptions.LocalRootPath);
+                Console.Error.WriteLine(" Path binding: {0} -> {1}", appOptions.PrefixRoot.Length == 0 ? "/" : appOptions.PrefixRoot, appOptions.DocumentRootPath);
 
                 Console.ForegroundColor = TimestampColor;
                 Console.Error.Write("[{0}]", GetCurrentTimestamp());
@@ -287,8 +287,8 @@ namespace SimpleHttpServer
             var hostPartList = new List<string>();
             var port = DefaultPort;
             var prefixRoot = "";
-            var localRootPath = DefaultLocalRootPath;
-            var treatPrefixRootAsLocalRoot = false;
+            var documentRootPath = DefaultDocumentRootPath;
+            var treatPrefixRootAsDocumentRoot = false;
             var useGzip = false;
             var shouldLaunchWebBrowser = false;
             var isGenerateHtml5IndexPage = true;
@@ -334,10 +334,10 @@ namespace SimpleHttpServer
                                 throw new InvalidOperationException(string.Format("Argument required for option \"{0}\"", arg));
                             }
                             i++;
-                            localRootPath = args[i];
-                            if (!Directory.Exists(localRootPath))
+                            documentRootPath = args[i];
+                            if (!Directory.Exists(documentRootPath))
                             {
-                                throw new DirectoryNotFoundException(localRootPath);
+                                throw new DirectoryNotFoundException(documentRootPath);
                             }
                             break;
                         case "-r":
@@ -349,7 +349,7 @@ namespace SimpleHttpServer
                             prefixRoot = args[i];
                             break;
                         case "-R":
-                            treatPrefixRootAsLocalRoot = true;
+                            treatPrefixRootAsDocumentRoot = true;
                             break;
                         case "-t":
                             hostPartList.Clear();
@@ -424,9 +424,9 @@ namespace SimpleHttpServer
 
             return new AppOptions(
                 prefixList,
-                localRootPath,
+                documentRootPath,
                 prefixRoot,
-                treatPrefixRootAsLocalRoot,
+                treatPrefixRootAsDocumentRoot,
                 useGzip,
                 shouldLaunchWebBrowser,
                 isGenerateHtml5IndexPage,
@@ -472,11 +472,11 @@ namespace SimpleHttpServer
             writer.WriteLine("  -H HOST");
             writer.WriteLine("    Use HOST as host part.");
             writer.WriteLine("  -l DIR");
-            writer.WriteLine("    Use specified local directory as the root. (Default: .)");
+            writer.WriteLine("    Use specified local directory as the document root. (Default: .)");
             writer.WriteLine("  -r DIR");
             writer.WriteLine("    Use specified directory for the part of directory of prefix.");
             writer.WriteLine("  -R");
-            writer.WriteLine("    Treat the prefix root directory as the local root directory.");
+            writer.WriteLine("    Treat the prefix root directory as the document root directory.");
             writer.WriteLine("  -t");
             writer.WriteLine("    Use \"http://+:80/Temporary_Listen_Addresses/\" as prefix.");
             writer.WriteLine("    Same as specifying \"-g\", \"-H Temporary_Listen_Addresses\" and port 80.");
@@ -914,7 +914,7 @@ namespace SimpleHttpServer
                 return;
             }
 
-            if (appOptions.TreatPrefixRootAsLocalRoot)
+            if (appOptions.TreatPrefixRootAsDocumentRoot)
             {
                 if (rawPath == appOptions.PrefixRoot)
                 {
@@ -930,7 +930,7 @@ namespace SimpleHttpServer
                 rawPath = "/.";
             }
 
-            var entryPath = (appOptions.LocalRootPath + WebUtility.UrlDecode(rawPath)).Replace("/", _dirSep);
+            var entryPath = (appOptions.DocumentRootPath + WebUtility.UrlDecode(rawPath)).Replace("/", _dirSep);
             if (entryPath.Contains(_parentMid) || entryPath.EndsWith(_parentLast))
             {
                 response.StatusCode = (int)HttpStatusCode.BadRequest;
@@ -1032,7 +1032,7 @@ namespace SimpleHttpServer
                     var sizeText = match.Groups[1].Value;
                     var size = sizeText.Length == 0 ? -1 : int.Parse(sizeText);
 
-                    var faviconPath = Path.Combine(appOptions.LocalRootPath, "favicon.ico");
+                    var faviconPath = Path.Combine(appOptions.DocumentRootPath, "favicon.ico");
                     var appleTouchIconData = CreateAppleTouchIconData(faviconPath, size);
                     if (appleTouchIconData.Length == 0)
                     {
@@ -1048,7 +1048,7 @@ namespace SimpleHttpServer
 #endif  // USE_WIN32ICON_AS_FAVICON || USE_EMBEDDED_ICON_AS_FAVICON
                 if (rawPath == "/.well-known/appspecific/com.chrome.devtools.json" && request.IsLocal)
                 {
-                    var chromeDevToolJson = CreateChromeDevToolJson(appOptions.LocalRootPath);
+                    var chromeDevToolJson = CreateChromeDevToolJson(appOptions.DocumentRootPath);
                     response.ContentType = "application/json";
                     TransferTextData(response, chromeDevToolJson, Encoding.UTF8, doGzip, shouldTransferBody);
                 }
@@ -1649,17 +1649,17 @@ namespace SimpleHttpServer
         /// </summary>
         public List<string> PrefixList { get; private set; }
         /// <summary>
-        /// Local root path.
+        /// Document root path.
         /// </summary>
-        public string LocalRootPath { get; private set; }
+        public string DocumentRootPath { get; private set; }
         /// <summary>
         /// Root path of the prefix.
         /// </summary>
         public string PrefixRoot { get; private set; }
         /// <summary>
-        /// True to treat the prefix root directory as the local root directory.
+        /// True to treat the prefix root directory as the document root directory.
         /// </summary>
-        public bool TreatPrefixRootAsLocalRoot { get; private set; }
+        public bool TreatPrefixRootAsDocumentRoot { get; private set; }
         /// <summary>
         /// True to compress text data with GZIP format.
         /// </summary>
@@ -1685,9 +1685,9 @@ namespace SimpleHttpServer
         /// Create <see cref="AppOptions"/> instance.
         /// </summary>
         /// <param name="prefixList"><see cref="List{T}"/> of the prefix.</param>
-        /// <param name="localRootPath">Local root path.</param>
+        /// <param name="documentRootPath">Document root path.</param>
         /// <param name="prefixRoot">Root path of the prefix.</param>
-        /// <param name="treatPrefixRootAsLocalRoot">True to treat the prefix root directory as the local root directory.</param>
+        /// <param name="treatPrefixRootAsDocumentRoot">True to treat the prefix root directory as the document root directory.</param>
         /// <param name="useGzip">True to compress text data with GZIP format.</param>
         /// <param name="shouldLaunchWebBrowser">True to launch default web browser after starting listening.</param>
         /// <param name="isGenerateHtml5IndexPage">True to create HTML5 index page, otherwise false (create HTML4.01 index page).</param>
@@ -1695,9 +1695,9 @@ namespace SimpleHttpServer
         /// <param name="logFormatType">Log format type.</param>
         public AppOptions(
             List<string> prefixList,
-            string localRootPath,
+            string documentRootPath,
             string prefixRoot,
-            bool treatPrefixRootAsLocalRoot,
+            bool treatPrefixRootAsDocumentRoot,
             bool useGzip,
             bool shouldLaunchWebBrowser,
             bool isGenerateHtml5IndexPage,
@@ -1705,9 +1705,9 @@ namespace SimpleHttpServer
             LogFormatType logFormatType)
         {
             PrefixList = prefixList;
-            LocalRootPath = localRootPath;
+            DocumentRootPath = documentRootPath;
             PrefixRoot = prefixRoot;
-            TreatPrefixRootAsLocalRoot = treatPrefixRootAsLocalRoot;
+            TreatPrefixRootAsDocumentRoot = treatPrefixRootAsDocumentRoot;
             UseGzip = useGzip;
             ShouldLaunchWebBrowser = shouldLaunchWebBrowser;
             IsGenerateHtml5IndexPage = isGenerateHtml5IndexPage;
